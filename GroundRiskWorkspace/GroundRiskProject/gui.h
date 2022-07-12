@@ -49,7 +49,7 @@
 #include <utility>
 #include <iostream>
 #include <fstream>
-//#include <sstream>
+#include <assert.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -79,6 +79,16 @@ class MainFrameBase : public wxFrame
             int total_time_s;
         };
         AirRiskInstance LoadAirRiskMap(std::string json_full_path, int total_time);
+        
+        struct Path {
+            std::vector<std::vector<int>> path;
+            float linear_combination_weight;
+            int risk;
+            float length_m;
+            float alpha;
+        };
+
+        float ComputeAirRisk(AirRiskInstance& air_risk_instance, Path& path);
 
 	protected:
 		wxMenuBar* m_menuBar;

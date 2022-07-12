@@ -6,6 +6,7 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "gui.h"
+#include "Bresenham.h"
 
 #include <libgen.h>         // dirname
 #include <unistd.h>         // readlink
@@ -212,6 +213,19 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     AirRiskInstance air_risk_instance = LoadAirRiskMap(json_full_path, total_time);
     
     std::cout << "Json file: " << air_risk_instance.map << std::endl;
+    
+    assert(map.at(0).size()==air_risk_instance.map.size());
+    assert(map.size()==air_risk_instance.map.at(0).size());
+
+    struct RiskMap {
+            std::vector<std::vector<int>> map;
+            float m_per_pixel;
+            int offset;
+        } risk_map;
+    risk_map.map = map;
+    risk_map.m_per_pixel = 000.0/(131.0/2.0);
+    risk_map.offset = 25;
+    //BicriteriaDijkstra
 }
 
 
@@ -230,6 +244,39 @@ MainFrameBase::AirRiskInstance MainFrameBase::LoadAirRiskMap(std::string json_fu
     air_risk_instance.total_time_s = total_time;
     return air_risk_instance;
 }
+
+//------------------------------------------------------------------------
+ float MainFrameBase::ComputeAirRisk(MainFrameBase::AirRiskInstance& air_risk_instance, MainFrameBase::Path& path)
+//------------------------------------------------------------------------
+{
+    float air_risk = 0.0;
+    int length_px = 0;
+    
+    for (int i = 0; i < path.path.size(); i++) {
+        std::vector<int> s = path.path.at(i);
+        std::vector<int> e = path.path.at(i+1);       
+
+        std::vector<std::vector<int>> points;
+        
+        Bresenham* br = new Bresenham(s.at(0), s.at(1), e.at(0), e.at(1));
+        points = br->getPoints();
+        delete br;
+        
+        for(int i=0; i < points.size(); i++){
+            int x=points.at(i).at(0);
+            int y=points.at(i).at(1);
+            air_risk += (float)air_risk_instance.map.at(x).at(y);
+            length_px += 1;
+        }
+        
+        //for (x, y) in Bresenham::new((s.x as isize, s.y as isize), (e.x as isize, e.y as isize)) {
+        //        air_risk += self.map[x as usize][y as usize] as f64;
+        //        length_px += 1;
+        //}
+    }
+    return (air_risk/(float)length_px)/((float)air_risk_instance.total_time_s);
+}
+ 
 
 //------------------------------------------------------------------------
 std::vector<std::vector<int>> MainFrameBase::LoadMapFromImage(wxImage& image, ColorsMapType& colors)
