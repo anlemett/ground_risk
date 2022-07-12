@@ -43,6 +43,14 @@
 
 #include "canvas.h"
 
+#include <string>
+#include <map>
+#include <vector>
+#include <utility>
+#include <iostream>
+#include <fstream>
+//#include <sstream>
+
 ///////////////////////////////////////////////////////////////////////////
 
 
@@ -62,8 +70,16 @@ class MyCanvas;
 
 class MainFrameBase : public wxFrame 
 {
-	private:
-	
+    private:
+        typedef std::map<std::vector<unsigned char>, int> ColorsMapType;
+        std::vector<std::vector<int>> LoadMapFromImage(wxImage& image, ColorsMapType& colors);
+        
+        struct AirRiskInstance {
+            std::vector<std::vector<int>> map;
+            int total_time_s;
+        };
+        AirRiskInstance LoadAirRiskMap(std::string json_full_path, int total_time);
+
 	protected:
 		wxMenuBar* m_menuBar;
 		wxMenu* m_menuFile;

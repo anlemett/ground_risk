@@ -7,8 +7,6 @@
 
 #include "gui.h"
 
-#include <string.h>
-
 #include <libgen.h>         // dirname
 #include <unistd.h>         // readlink
 #include <linux/limits.h>   // PATH_MAX
@@ -23,7 +21,62 @@ BEGIN_EVENT_TABLE(MainFrameBase, wxFrame)
 
 END_EVENT_TABLE()
 
-// old
+std::istream& operator>>(std::istream& is, std::vector<int>& vec)
+{
+    //#1 - check if it starts from '['
+    char c;
+    is >> c;
+    if (c != '[')
+        throw std::runtime_error(std::string("Invalid character : ") + c + 
+                                   " when parsing vector of double");
+    //#2 - get the line till ']'
+    std::string line;
+    if (!std::getline(is, line, ']'))
+        throw std::runtime_error("Error parsing vector of double");
+
+    //#3 - parse values inside '[' and ']'
+    std::istringstream lstr(line);
+    std::string value;
+    while (std::getline(lstr, value, ','))
+        vec.push_back(stod(value));
+    return is;
+}
+
+std::istream& operator>>(std::istream& is, std::vector<std::vector<int>>& m)
+{
+    //#1 - check if it starts from '['
+    char c;
+    is >> c;
+    if (c != '[')
+        throw std::runtime_error(std::string("Invalid character : ") + c + 
+                                   " when parsing json file");
+
+    // parse matrix line-by-line
+    while(true)
+    {
+        std::vector<int> tmp;
+        is >> tmp;
+        m.push_back(std::move(tmp));
+        // if matrix finihed, c should contain ']', else - ','
+        is >> c;
+        if (c == ']')
+            return is;
+        if (c != ',')
+            throw std::runtime_error(std::string("Invalid character : ") + c + 
+                                       " when parsing json file");
+    }
+}
+
+// display vector
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const std::vector<T>& t)
+{
+    os << "[";
+    for (auto it = t.begin(); it != t.end(); ++it)
+        os << (it != t.begin() ? ", " : "") << *it;
+    os << "]";
+    return os;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -103,7 +156,21 @@ void MainFrameBase::OnProcessImage(wxCommandEvent& WXUNUSED(event))
 void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
 //------------------------------------------------------------------------
 {
-	wxBitmap bitmap;
+    std::vector<unsigned char> color1 = {255, 255, 255, 255};
+    std::vector<unsigned char> color2 = {214, 214, 214, 255};
+    std::vector<unsigned char> color3 = {180, 209, 82, 255};
+    std::vector<unsigned char> color4 = {183, 103, 26, 255};
+    std::vector<unsigned char> color5 = {109, 0, 65, 255};
+    std::vector<unsigned char> color6 = {27, 0, 31, 255};
+    
+    ColorsMapType colors;
+
+    std::pair<ColorsMapType::iterator, bool> result1 = colors.insert(std::make_pair(color1, 1));
+    std::pair<ColorsMapType::iterator, bool> result2 = colors.insert(std::make_pair(color2, 4));
+    std::pair<ColorsMapType::iterator, bool> result3 = colors.insert(std::make_pair(color3, 19));
+    std::pair<ColorsMapType::iterator, bool> result4 = colors.insert(std::make_pair(color4, 199));
+    std::pair<ColorsMapType::iterator, bool> result5 = colors.insert(std::make_pair(color5, 499));
+    std::pair<ColorsMapType::iterator, bool> result6 = colors.insert(std::make_pair(color6, 1000));
 
 	//wxString filename = wxFileSelector(_T("Select file"),_T(""),_T(""),_T(""), _T("All files (*.*)|*.*") );
     //std::cout << filename;
@@ -116,14 +183,94 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     }
     
     std::string full_path = path;
-    full_path = full_path.append("/data/density_fixed_scaled.png");
-    wxString filename = full_path;
-	if ( !filename.empty() )
+    std::string png_full_path = full_path;
+    png_full_path = png_full_path.append("/data/density_fixed_scaled.png");
+    wxString png_filename = png_full_path;
+	if ( !png_filename.empty() )
 	{
-		m_canvas->LoadImage(filename) ;
+		m_canvas->LoadImage(png_filename) ;
 		m_imageLoaded = true ;
 	}
+       
+    // Load the image.
+    wxImage image(png_full_path, wxBITMAP_TYPE_PNG);
+    //wxBitmap bitmap(image);
+    std::vector<std::vector<int>> map = LoadMapFromImage(image, colors);
+    
+    // Displaying map
+    /*for (int i = 0; i < map.size(); i++) {
+        for (auto it = map[i].begin(); it != map[i].end(); it++)
+            std::cout << *it << " ";
+        std::cout << std::endl;
+    }*/
+    
+    int total_time = 4*7*24;
+    
+    std::string json_full_path = full_path.append("/data/map.json");
+    std::cout << json_full_path << "\n";
+    
+    AirRiskInstance air_risk_instance = LoadAirRiskMap(json_full_path, total_time);
+    
+    std::cout << "Json file: " << air_risk_instance.map << std::endl;
 }
+
+
+//------------------------------------------------------------------------
+MainFrameBase::AirRiskInstance MainFrameBase::LoadAirRiskMap(std::string json_full_path, int total_time)
+//------------------------------------------------------------------------
+{
+    std::ifstream json_file;
+    json_file.open (json_full_path);
+    
+    AirRiskInstance air_risk_instance;
+    
+    json_file >> air_risk_instance.map;
+    json_file.close();
+    
+    air_risk_instance.total_time_s = total_time;
+    return air_risk_instance;
+}
+
+//------------------------------------------------------------------------
+std::vector<std::vector<int>> MainFrameBase::LoadMapFromImage(wxImage& image, ColorsMapType& colors)
+//------------------------------------------------------------------------
+{
+   
+    std::vector<std::vector<int>> map;
+
+    unsigned char *rgb = image.GetData(), *alpha = image.GetAlpha();
+    
+    int image_height = image.GetHeight();
+    int image_width = image.GetWidth();
+    //std::cout << image_height << " " << image_width << "\n";
+
+    for (int y = 0; y < image_height; y++) {
+        std::vector<int> line;
+        for (int x = 0; x < image_width; x++) {
+            int offs = (y * image_width) + x;   ////Alpha offset
+            unsigned char pAlpha = 255;
+            if (image.HasAlpha()) {
+                pAlpha = *(alpha + offs);
+            }
+            
+            offs = offs*3; //RGB offset
+            // RGB might be ordered in reverse
+            unsigned char pRed = *(rgb + offs);
+            unsigned char pGreen = *(rgb + offs + 1);
+            unsigned char pBlue = *(rgb + offs + 2);
+           
+            //std::cout << (int)pAlpha <<" "<<(int)pRed <<" "<< (int)pGreen << " "<< (int)pBlue << "\n";
+            std::vector<unsigned char> color = {pRed, pGreen, pBlue, pAlpha};
+            int risk = colors.at(color);
+            //std::cout << risk <<"\n";
+            
+            line.push_back(risk);
+        }
+        map.push_back(line);
+    }
+    return map;
+}
+
 
 //------------------------------------------------------------------------
 void MainFrameBase::OnSaveImage(wxCommandEvent & WXUNUSED(event))
