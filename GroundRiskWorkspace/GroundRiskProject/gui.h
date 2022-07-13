@@ -42,6 +42,7 @@
 #include <filesystem>
 
 #include "canvas.h"
+#include "types.h"
 
 #include <string>
 #include <map>
@@ -50,6 +51,7 @@
 #include <iostream>
 #include <fstream>
 #include <assert.h>
+#include <chrono>
 
 ///////////////////////////////////////////////////////////////////////////
 

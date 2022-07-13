@@ -7,6 +7,7 @@
 
 #include "gui.h"
 #include "Bresenham.h"
+#include "BicriteriaDijkstraInstance.h"
 
 #include <libgen.h>         // dirname
 #include <unistd.h>         // readlink
@@ -212,20 +213,47 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     
     AirRiskInstance air_risk_instance = LoadAirRiskMap(json_full_path, total_time);
     
-    std::cout << "Json file: " << air_risk_instance.map << std::endl;
+    //std::cout << "Json file: " << air_risk_instance.map << std::endl;
     
     assert(map.at(0).size()==air_risk_instance.map.size());
     assert(map.size()==air_risk_instance.map.at(0).size());
 
-    struct RiskMap {
-            std::vector<std::vector<int>> map;
-            float m_per_pixel;
-            int offset;
-        } risk_map;
+    RiskMap risk_map;
     risk_map.map = map;
-    risk_map.m_per_pixel = 000.0/(131.0/2.0);
+    risk_map.m_per_pixel = 1000.0/(131.0/2.0);
     risk_map.offset = 25;
+    
     //BicriteriaDijkstra
+    
+    std::vector<int> from = {517, 412};
+    std::vector<int> to = {765, 600};
+    BicriteriaDijkstraInstance* inst = new BicriteriaDijkstraInstance(risk_map, from, to, 5, 150);
+    
+    auto start = std::chrono::high_resolution_clock::now();
+
+    //let paths = inst.compute_pareto_apx_paths();
+
+    //println!("{:?}", paths);
+
+    //let mut res_routes = vec![];
+
+    //for path in paths {
+        //let air_risk = air_risk_instance.compute_air_risk(&path);
+        //res_routes.push(HFRMPath{
+            //route: path.path,
+            //air_risk: air_risk,
+            //ground_risk: path.risk as f64,
+            //length_m: path.length_m,
+            //alpha: path.alpha
+        //})
+    //}
+
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+    std::cout << duration.count() << std::endl;
+
+    //save_paths_to_json("./results/res_nk.json", &res_routes);
+
 }
 
 
