@@ -1,7 +1,7 @@
 #include "BicriteriaDijkstraInstance.h"
 #include "NeighboursIter.h"
 
-BicriteriaDijkstraInstance::BicriteriaDijkstraInstance(RiskMap& risk_map, std::vector<int> from, std::vector<int> to,
+BicriteriaDijkstraInstance::BicriteriaDijkstraInstance(RiskMap& risk_map, Coord from, Coord to,
     int search_limit, float r)
 {
     (*this).risk_map = risk_map;
@@ -25,7 +25,7 @@ std::vector<Path> BicriteriaDijkstraInstance::computeParetoApxPaths() {
     
     path = runWithAlpha(100000);
     paths.push_back(path);
-    
+/*    
     // By default a max heap is created ordered by first element of pair
     //std::priority_queue<std::pair<std::vector<int>, int>> intervals_queue;
     std::priority_queue<std::pair<int, std::vector<int>>> intervals_queue;
@@ -61,7 +61,7 @@ std::vector<Path> BicriteriaDijkstraInstance::computeParetoApxPaths() {
             }
         }
     }
-
+*/
     return paths;
 }
 
@@ -69,98 +69,107 @@ std::vector<Path> BicriteriaDijkstraInstance::computeParetoApxPaths() {
 Path BicriteriaDijkstraInstance::runWithAlpha(float alpha) {
     std::cout << "Computing for alpha: " << alpha << std::endl;
     
-    std::map<std::vector<int>, float> labels;
-    std::map<std::vector<int>, std::vector<int>> previous_nodes;
+    std::unordered_map<Coord, float, hash_fn> labels;
+    std::unordered_map<Coord, Coord, hash_fn> previous_nodes;
     
 //        let mut pq: PriorityQueue<_, Reverse<OrderedFloat<f64>>, DefaultHashBuilder> = 
 //          PriorityQueue::<_, Reverse<OrderedFloat<f64>>, DefaultHashBuilder>::with_default_hasher();
-    std::priority_queue<std::pair<float, std::vector<int>>> pq;
 
-    pq.push(make_pair(0.0, this->from));
+    struct comparator {
+        bool operator()(
+            std::pair<Coord, float>& a,
+            std::pair<Coord, float>& b)
+                {
+                return a.second > b.second;
+                }
+        };
+        
+    std::priority_queue<std::pair<Coord, float>, std::vector<std::pair<Coord, float>>, comparator> pq;
+    
+    pq.push(std::make_pair(this->from, 0.0));
+           
+    labels.insert({ this->from, 0.0 });
+
     previous_nodes.insert({ this->from, this->from });
 
     while (!pq.empty()) {
 
-        std::vector<int> current_node = pq.top().second;
+        Coord current_node = pq.top().first;
         pq.pop();
-
+        
         float current_label = labels.at(current_node);
 
         if (current_node == this->to) {
             break;
         }
-        
-        NeighboursIter neigbours = this->risk_map.neighboursWithin(current_node, this->search_limit);
-        
-        for (auto neighbour : neigbours)
-            std::cout << "test " << "\n";
-        
-        
 
-//        for neighbour in self.risk_map.neighbours_within(current_node, self.search_limit) {
-//                let weight = self.risk_map.risk(current_node, neighbour, self.r_m) as f64 * alpha + self.risk_map.length_m(current_node, neighbour);
-//                let new_label = current_label + weight;
-
-//                let mut entry = labels.entry(neighbour);
-
-//                match entry {
-//                    Occupied(mut entry) => {
-//                        if entry.get() > &new_label {
-//                            entry.insert(new_label);
-//                            *previous_nodes.entry(neighbour).or_insert(current_node) = current_node;
-//                            pq.push(neighbour, Reverse(OrderedFloat(new_label)));
-//                        }
-//                    },
-//                    Vacant(entry) => {
-//                        entry.insert(new_label);
-//                        *previous_nodes.entry(neighbour).or_insert(current_node) = current_node;
-//                        pq.push(neighbour, Reverse(OrderedFloat(new_label)));
-//                    }
-//                }
-//            }
+        Neighbours neigbours = this->risk_map.neighboursWithin(current_node, this->search_limit);
+        
+        //std::cout << "neighboursWithin from: " << neigbours.x_from << " " << neigbours.y_from << std::endl;
+        //std::cout << "neighboursWithin to: " << neigbours.x_to << " " << neigbours.y_to << std::endl;
+        
+       for (auto neighbour : neigbours) {
+           
+           //std::cout << neighbour.x << " " << neighbour.y << std::endl;
+            
+            float weight = this->risk_map.risk(current_node, neighbour, this->r_m) * alpha + 
+                this->risk_map.lengthM(current_node, neighbour);
+            
+            float new_label = current_label + weight;
+            
+            if (labels.find(neighbour) == labels.end()) {
+                //key is not present
+                labels.insert({ neighbour, new_label });
+                previous_nodes.insert({ neighbour, current_node });
+                pq.push(std::make_pair(neighbour, new_label));
+            }
+            else {
+                // key is present
+                float entry = labels.at(neighbour);
+                if (entry > new_label) {
+                    labels.at(neighbour) = new_label;
+                    previous_nodes.at(neighbour) = current_node;
+                    pq.push(std::make_pair(neighbour, new_label));
+                }
+            }
+        }
     }
-
-//        return self.unwrap_path(&previous_nodes, &labels, alpha);
-    Path temp; // remove
-    return temp;
+    
+    return this->unwrapPath(previous_nodes, labels, alpha);
 }
 
 
-Path BicriteriaDijkstraInstance::unwrapPath(std::unordered_map<std::vector<int>, std::vector<int>> nodes_previous,
-                                            std::unordered_map<std::vector<int>, int> nodes_labels,
+Path BicriteriaDijkstraInstance::unwrapPath(std::unordered_map<Coord, Coord, hash_fn> nodes_previous,
+                                            std::unordered_map<Coord, float, hash_fn> nodes_labels,
                                             float alpha) {
-//    fn unwrap_path(&self, nodes_previous: &HashMap<Coord<i16>, Coord<i16>>, nodes_labels: &HashMap<Coord<i16>, f64>, alpha: f64) -> Path {
-//        let mut path = vec![];
-//        let mut total_risk = 0;
-//        let mut total_length = 0.0;
+    std::cout << "unwrapPath\n";
+    std::vector<Coord>  path;
+    int total_risk = 0;
+    float total_length = 0.0;
 
-//        let mut previous_node = &self.to;
+    Coord previous_node = this->to;
+        
+    while (previous_node != this->from) {
+        std::cout << "unwrapPath1\n";
+        path.push_back(previous_node);
+        std::cout << "unwrapPath2\n";
+        Coord new_previous_node = nodes_previous.at(previous_node);
+        std::cout << "unwrapPath3\n";
+        total_risk += this->risk_map.risk(previous_node, new_previous_node, this->r_m);
+        std::cout << "unwrapPath4\n";
+        total_length += this->risk_map.lengthM(previous_node, new_previous_node);
+        std::cout << "unwrapPath5\n";
+        previous_node = new_previous_node;
+        std::cout << "unwrapPath6\n";
+    }
+    std::cout << "unwrapPath7\n";
+    path.push_back(this->from);
+    total_risk += this->risk_map.risk(previous_node, this->from, this->r_m);
+    total_length += this->risk_map.lengthM(previous_node, this->from);
 
-//        while previous_node != &self.from {
-//            path.push(*previous_node);
-
-//            let new_previous_node = nodes_previous.get(previous_node).unwrap();
-
-//            total_risk += self.risk_map.risk(*previous_node, *new_previous_node, self.r_m);
-//            total_length += self.risk_map.length_m(*previous_node, *new_previous_node);
-
-//            previous_node = new_previous_node;
-//        }
-
-//        path.push(self.from);
-//        total_risk += self.risk_map.risk(*previous_node, self.from, self.r_m);
-//        total_length += self.risk_map.length_m(*previous_node, self.from);
-
-//        return Path{
-//            path,
-//            linear_combination_weight: *nodes_labels.get(&self.to).unwrap(),
-//            risk: total_risk,
-//            length_m: total_length,
-//            alpha: alpha
-//        }
-//    }
-    Path temp; // remove
-    return temp;
+    return ((struct Path) {path, nodes_labels.at(this->to), total_risk, total_length, alpha});
+    //Path temp; //remove
+    //return temp;
 }
 
 //impl Display for Path {

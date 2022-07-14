@@ -26,6 +26,7 @@
 
 
 #include "wx/wxprec.h"
+#include "risks.h"
 
 #ifdef __BORLANDC__
     #pragma hdrstop
@@ -42,7 +43,8 @@
 #include <filesystem>
 
 #include "canvas.h"
-#include "types.h"
+#include "risks.h"
+#include "AirRiskInstance.h"
 
 #include <string>
 #include <map>
@@ -73,25 +75,11 @@ class MyCanvas;
 class MainFrameBase : public wxFrame 
 {
     private:
-        typedef std::map<std::vector<unsigned char>, int> ColorsMapType;
+
         std::vector<std::vector<int>> LoadMapFromImage(wxImage& image, ColorsMapType& colors);
         
-        struct AirRiskInstance {
-            std::vector<std::vector<int>> map;
-            int total_time_s;
-        };
         AirRiskInstance LoadAirRiskMap(std::string json_full_path, int total_time);
         
-        struct Path {
-            std::vector<std::vector<int>> path;
-            float linear_combination_weight;
-            int risk;
-            float length_m;
-            float alpha;
-        };
-
-        float ComputeAirRisk(AirRiskInstance& air_risk_instance, Path& path);
-
 	protected:
 		wxMenuBar* m_menuBar;
 		wxMenu* m_menuFile;

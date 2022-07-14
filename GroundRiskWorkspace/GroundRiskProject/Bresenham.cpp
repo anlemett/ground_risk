@@ -27,16 +27,12 @@ Bresenham::Bresenham(float x1, float y1, float x2, float y2)
         for(int x=(int)x1; x<=maxX; x++) {
             if(steep) {
                 //SetPixel(y,x, color);
-                std::vector<int> point;
-                point.push_back(y);
-                point.push_back(x);
+                Coord point(y,x);
                 points.push_back(point);
             }
             else {
                 //SetPixel(x,y, color);
-                std::vector<int> point;
-                point.push_back(x);
-                point.push_back(y);
+                Coord point(x,y);
                 points.push_back(point);
             }
  
@@ -54,7 +50,7 @@ Bresenham::~Bresenham()
 }
 
 
-std::vector<std::vector<int>> Bresenham::getPoints()
+std::vector<Coord> Bresenham::getPoints()
 {
     return points;
 }

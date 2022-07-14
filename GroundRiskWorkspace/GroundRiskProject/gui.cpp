@@ -6,8 +6,9 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "gui.h"
-#include "Bresenham.h"
+#include "AirRiskInstance.h"
 #include "BicriteriaDijkstraInstance.h"
+#include "risks.h"
 
 #include <libgen.h>         // dirname
 #include <unistd.h>         // readlink
@@ -225,13 +226,14 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     
     //BicriteriaDijkstra
     
-    std::vector<int> from = {517, 412};
-    std::vector<int> to = {765, 600};
-    BicriteriaDijkstraInstance* inst = new BicriteriaDijkstraInstance(risk_map, from, to, 5, 150);
+    Coord from = {517, 412};
+    Coord to = {765, 600};
     
     auto start = std::chrono::high_resolution_clock::now();
+    
+    BicriteriaDijkstraInstance* inst = new BicriteriaDijkstraInstance(risk_map, from, to, 5, 150);
 
-    //let paths = inst.compute_pareto_apx_paths();
+    std::vector<Path> paths = inst->computeParetoApxPaths();
 
     //println!("{:?}", paths);
 
@@ -240,7 +242,7 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     //for path in paths {
         //let air_risk = air_risk_instance.compute_air_risk(&path);
         //res_routes.push(HFRMPath{
-            //route: path.path,
+            //route: path.path,/
             //air_risk: air_risk,
             //ground_risk: path.risk as f64,
             //length_m: path.length_m,
@@ -248,6 +250,8 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
         //})
     //}
 
+    delete inst;
+    
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
     std::cout << duration.count() << std::endl;
@@ -258,7 +262,7 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
 
 
 //------------------------------------------------------------------------
-MainFrameBase::AirRiskInstance MainFrameBase::LoadAirRiskMap(std::string json_full_path, int total_time)
+AirRiskInstance MainFrameBase::LoadAirRiskMap(std::string json_full_path, int total_time)
 //------------------------------------------------------------------------
 {
     std::ifstream json_file;
@@ -273,38 +277,6 @@ MainFrameBase::AirRiskInstance MainFrameBase::LoadAirRiskMap(std::string json_fu
     return air_risk_instance;
 }
 
-//------------------------------------------------------------------------
- float MainFrameBase::ComputeAirRisk(MainFrameBase::AirRiskInstance& air_risk_instance, MainFrameBase::Path& path)
-//------------------------------------------------------------------------
-{
-    float air_risk = 0.0;
-    int length_px = 0;
-    
-    for (int i = 0; i < path.path.size(); i++) {
-        std::vector<int> s = path.path.at(i);
-        std::vector<int> e = path.path.at(i+1);       
-
-        std::vector<std::vector<int>> points;
-        
-        Bresenham* br = new Bresenham(s.at(0), s.at(1), e.at(0), e.at(1));
-        points = br->getPoints();
-        delete br;
-        
-        for(int i=0; i < points.size(); i++){
-            int x=points.at(i).at(0);
-            int y=points.at(i).at(1);
-            air_risk += (float)air_risk_instance.map.at(x).at(y);
-            length_px += 1;
-        }
-        
-        //for (x, y) in Bresenham::new((s.x as isize, s.y as isize), (e.x as isize, e.y as isize)) {
-        //        air_risk += self.map[x as usize][y as usize] as f64;
-        //        length_px += 1;
-        //}
-    }
-    return (air_risk/(float)length_px)/((float)air_risk_instance.total_time_s);
-}
- 
 
 //------------------------------------------------------------------------
 std::vector<std::vector<int>> MainFrameBase::LoadMapFromImage(wxImage& image, ColorsMapType& colors)
