@@ -15,6 +15,7 @@ Neighbours::Neighbours(RiskMap* map, int search_limit, Coord p)
     this->x_to = std::min(width - 1, p.x - map->offset + search_limit);
     this->y_from = std::max(0, p.y - map->offset - search_limit);
     this->y_to = std::min(height - 1, p.y - map->offset + search_limit);
+
 }
 
 Neighbours::~Neighbours()
@@ -30,7 +31,7 @@ NeighboursIter Neighbours::begin() {
  
 NeighboursIter Neighbours::end() {//used to determine when the boundary has been reached: it should not be accessed directly
 
-    Coord current_point = Coord(-1, -1);
+    Coord current_point = Coord(this->x_to, this->y_to);
     return NeighboursIter(this->p, current_point, this->x_from, this->y_from, this->x_to, this->y_to, this->map->offset);   
     }
 

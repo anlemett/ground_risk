@@ -1,5 +1,6 @@
 #include "AirRiskInstance.h"
 #include "Bresenham.h"
+#include <iostream>
 
 AirRiskInstance::AirRiskInstance()
 {
@@ -14,9 +15,9 @@ AirRiskInstance::~AirRiskInstance()
     float air_risk = 0.0;
     int length_px = 0;
     
-    for (int i = 0; i < path.path.size(); i++) {
+    for (int i = 0; i < path.path.size()-1; i++) {
         Coord s = path.path.at(i);
-        Coord e = path.path.at(i+1);       
+        Coord e = path.path.at(i+1); 
 
         std::vector<Coord> points;
         

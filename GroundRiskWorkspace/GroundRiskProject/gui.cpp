@@ -222,23 +222,36 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     RiskMap risk_map;
     risk_map.map = map;
     risk_map.m_per_pixel = 1000.0/(131.0/2.0);
-    risk_map.offset = 25;
+    //risk_map.offset = 25;
+    risk_map.offset = 0;
     
     //BicriteriaDijkstra
     
+    //Coord from = {517, 412};
+    //Coord to = {765, 600};
     Coord from = {517, 412};
-    Coord to = {765, 600};
+    Coord to = {520, 415};
     
     auto start = std::chrono::high_resolution_clock::now();
     
     BicriteriaDijkstraInstance* inst = new BicriteriaDijkstraInstance(risk_map, from, to, 5, 150);
 
     std::vector<Path> paths = inst->computeParetoApxPaths();
+    
+    std::cout << paths << std::endl;
 
     //println!("{:?}", paths);
 
-    //let mut res_routes = vec![];
+    std::vector<HFRMPath> res_routes;
 
+    for (auto &path : paths) {
+        float air_risk = air_risk_instance.ComputeAirRisk(path);
+        HFRMPath hfrm_path = {path.path, air_risk, path.risk, path.length_m, path.alpha};
+        //std::cout << hfrm_path.route << " ";
+        std::cout << hfrm_path.air_risk << " " << hfrm_path.ground_risk;
+        std::cout << " " << hfrm_path.length_m << " " << hfrm_path.alpha << "\n";
+        //res_routes.push_back(hfrm_path);
+    }
     //for path in paths {
         //let air_risk = air_risk_instance.compute_air_risk(&path);
         //res_routes.push(HFRMPath{

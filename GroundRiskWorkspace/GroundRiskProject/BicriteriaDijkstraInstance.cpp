@@ -25,7 +25,7 @@ std::vector<Path> BicriteriaDijkstraInstance::computeParetoApxPaths() {
     
     path = runWithAlpha(100000);
     paths.push_back(path);
-/*    
+    
     // By default a max heap is created ordered by first element of pair
     //std::priority_queue<std::pair<std::vector<int>, int>> intervals_queue;
     std::priority_queue<std::pair<int, std::vector<int>>> intervals_queue;
@@ -61,7 +61,6 @@ std::vector<Path> BicriteriaDijkstraInstance::computeParetoApxPaths() {
             }
         }
     }
-*/
     return paths;
 }
 
@@ -94,8 +93,14 @@ Path BicriteriaDijkstraInstance::runWithAlpha(float alpha) {
 
     while (!pq.empty()) {
 
+        
         Coord current_node = pq.top().first;
+        if (current_node == this->to) {
+            //std::cout << "!!!current_node == this->to!!!\n";
+        }
         pq.pop();
+        
+        //std::cout << "new current_node in dijkstra" << current_node.x << " " << current_node.y << "\n";
         
         float current_label = labels.at(current_node);
 
@@ -150,26 +155,17 @@ Path BicriteriaDijkstraInstance::unwrapPath(std::unordered_map<Coord, Coord, has
     Coord previous_node = this->to;
         
     while (previous_node != this->from) {
-        std::cout << "unwrapPath1\n";
         path.push_back(previous_node);
-        std::cout << "unwrapPath2\n";
         Coord new_previous_node = nodes_previous.at(previous_node);
-        std::cout << "unwrapPath3\n";
         total_risk += this->risk_map.risk(previous_node, new_previous_node, this->r_m);
-        std::cout << "unwrapPath4\n";
         total_length += this->risk_map.lengthM(previous_node, new_previous_node);
-        std::cout << "unwrapPath5\n";
         previous_node = new_previous_node;
-        std::cout << "unwrapPath6\n";
     }
-    std::cout << "unwrapPath7\n";
     path.push_back(this->from);
     total_risk += this->risk_map.risk(previous_node, this->from, this->r_m);
     total_length += this->risk_map.lengthM(previous_node, this->from);
 
     return ((struct Path) {path, nodes_labels.at(this->to), total_risk, total_length, alpha});
-    //Path temp; //remove
-    //return temp;
 }
 
 //impl Display for Path {

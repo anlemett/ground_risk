@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+#include <iostream>
 
 typedef std::map<std::vector<unsigned char>, int> ColorsMapType;
 
@@ -18,6 +19,11 @@ struct Coord {
         this->y = y;
     }
     
+    friend std::ostream& operator << (std::ostream& os, const Coord& coord) {
+        os << "("<< coord.x << ", " << coord.y << ") " << std::endl;
+        return os;
+    }
+
     bool operator==(const Coord& p) const {
         return (x == p.x && y == p.y);
     }
@@ -63,7 +69,23 @@ struct Path {
         this->length_m = length_m;
         this->alpha = alpha;
     }
+    
+    friend std::ostream& operator << (std::ostream& os, const Path& path) {
+        os << "Path: ";
+        for (auto element: path.path)
+            std::cout << element << " ";
+        os << std::endl;
+        return os;
+    }
 };
 
+
+struct HFRMPath {
+    std::vector<Coord>  route;
+    float air_risk;
+    float ground_risk;
+    float length_m;
+    float alpha;
+};
 
 #endif //__RISKS_H__

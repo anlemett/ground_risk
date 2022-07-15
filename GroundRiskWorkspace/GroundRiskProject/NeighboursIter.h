@@ -55,7 +55,8 @@ public:
         }
 
         if (this->current_point.y > this->y_to) {
-            current_point = Coord(-1, -1);
+            std::cout << "!!this->current_point.y > this->y_to!!" << this->current_point.y << " " << this->y_to << "\n";
+            current_point = Coord(this->x_to, this->y_to);
             return;
         }
 
@@ -70,11 +71,11 @@ public:
         if (this->current_point.x >= this->x_to) {
             this->current_point.x = this->x_from;
             this->current_point.y += 1;
-            //std::cout << "increase y\n";
+            //std::cout << "increase y" << this->current_point.y <<"\n";
         }
         else {
             this->current_point.x += 1;
-            //std::cout << "increase x\n";
+            //std::cout << "increase x" << this->current_point.x <<"\n";
         }
     }
 
