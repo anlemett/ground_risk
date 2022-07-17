@@ -12,6 +12,7 @@
  *********************************************************************/
 
 #include "main.h"
+#include "canvas.h"
 
 #include <wx/image.h>
 #include <wx/file.h>
@@ -47,6 +48,7 @@ bool MainApp::OnInit()
 ////////////////////////////////////////////////////////////////////////////////
 
 MainFrame::MainFrame(wxWindow *parent) : MainFrameBase( parent )
+//MainFrame::MainFrame(wxWindow *parent) : MyFrame( parent )
 {
 }
 

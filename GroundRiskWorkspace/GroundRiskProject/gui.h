@@ -1,8 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 // C++ code generated with wxFormBuilder (version Nov  5 2013)
 // http://www.wxformbuilder.org/
-//
-// PLEASE DO "NOT" EDIT THIS FILE!
 ///////////////////////////////////////////////////////////////////////////
 
 #ifndef __GUI_H__
@@ -64,7 +62,8 @@ enum
 	ID_LOAD
 };
 
-class MyCanvas;
+//class MyCanvas;
+class MyBitmapPanel;
 
 class MainFrameBase : public wxFrame 
 {
@@ -86,7 +85,7 @@ class MainFrameBase : public wxFrame
         void OnOpenImage(wxCommandEvent& WXUNUSED(event) ) ;
         void OnClose(wxCloseEvent& event) ;
 
-        MyCanvas *m_canvas; // the canvas inside the main frame
+        //MyCanvas *m_canvas; // the canvas inside the main frame
         bool m_imageLoaded ;
         DECLARE_EVENT_TABLE()
 		
@@ -97,6 +96,69 @@ class MainFrameBase : public wxFrame
 		
 		~MainFrameBase();
 	
+
+/************************/
+
+public:
+ /*   MyFrame() : wxFrame(NULL, wxID_ANY, "Test")
+    {
+        const int borderAround = FromDIP(10);
+        
+        wxBoxSizer* bSizer = new wxBoxSizer(wxVERTICAL);
+
+        wxButton* button = new wxButton(this, wxID_ANY, "Load image file...");
+        bSizer->Add(button, wxSizerFlags().Expand().Border(wxALL, borderAround));
+        button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &MyFrame::OnLoadImageFile, this);
+
+        m_bitmapPanel = new MyBitmapPanel(this);
+        bSizer->Add(m_bitmapPanel, wxSizerFlags().Expand().Proportion(1).Border(wxALL, borderAround));
+        
+        SetSizer(bSizer);
+    }	*/
+private:
+    MyBitmapPanel* m_bitmapPanel;
+    
+    void OnLoadImageFile(wxCommandEvent&)
+    {
+        static wxString fileName;
+        wxImage image;
+        
+        char result[PATH_MAX];
+        ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+        const char *path;
+        if (count != -1) {
+            path = dirname(result);
+        }
+    
+        std::string full_path = path;
+        std::string png_full_path = full_path;
+        png_full_path = png_full_path.append("/data/density_fixed_scaled.png");
+        fileName = png_full_path;
+
+
+        if ( fileName.empty() )
+            return;
+                
+        if ( image.LoadFile(fileName) )
+        {   
+                        
+            Coord from = {517, 412};
+            Coord to = {567, 462};
+            for (int i= from.x-5; i<from.x+5;i++)
+                for (int j=from.y-5; j<from.y+5;j++) 
+                    image.SetRGB(i, j, 255,0,0);
+                    
+            for (int i= to.x-5; i<to.x+5;i++)
+                for (int j=to.y-5; j<to.y+5;j++) 
+                    image.SetRGB(i, j, 255,0,0);
+
+            m_bitmapPanel->SetBitmap(wxBitmap(image));
+            SetTitle(wxString::Format("Simple Image Viewer (%s: %d x %d pixels)", 
+                wxFileName(fileName).GetFullName(), image.GetWidth(), image.GetHeight()));                
+        }                
+    }
 };
 
+
+ /********************************/
 #endif //__GUI_H__

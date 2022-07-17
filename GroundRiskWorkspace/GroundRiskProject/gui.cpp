@@ -91,9 +91,24 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
 	SetMenuBar( menuBar );
 
 // create the canvas that will manage the image
-	m_canvas = new MyCanvas( this, -1, wxDefaultPosition, wxDefaultSize);
+	//m_canvas = new MyCanvas( this, -1, wxDefaultPosition, wxDefaultSize);
 	m_imageLoaded = false ;
 	Centre() ;
+    
+    
+        const int borderAround = FromDIP(10);
+        
+        wxBoxSizer* bSizer = new wxBoxSizer(wxVERTICAL);
+
+        wxButton* button = new wxButton(this, wxID_ANY, "Load image file...");
+        bSizer->Add(button, wxSizerFlags().Expand().Border(wxALL, borderAround));
+        button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &MainFrameBase::OnLoadImageFile, this);
+
+        m_bitmapPanel = new MyBitmapPanel(this);
+        bSizer->Add(m_bitmapPanel, wxSizerFlags().Expand().Proportion(1).Border(wxALL, borderAround));
+        
+        SetSizer(bSizer);
+
 
 }
 
@@ -108,7 +123,7 @@ void MainFrameBase::OnQuit(wxCommandEvent& WXUNUSED(event))
 void MainFrameBase::OnClose(wxCloseEvent& event)
 //------------------------------------------------------------------------
 {
-	delete m_canvas ;
+	//delete m_canvas ;
 	event.Skip() ;
 }
 
@@ -146,15 +161,9 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     std::string png_full_path = full_path;
     png_full_path = png_full_path.append("/data/density_fixed_scaled.png");
     wxString png_filename = png_full_path;
-	if ( !png_filename.empty() )
-	{
-		m_canvas->LoadImage(png_filename) ;
-		m_imageLoaded = true ;
-	}
        
     // Load the image.
     wxImage image(png_full_path, wxBITMAP_TYPE_PNG);
-    //wxBitmap bitmap(image);
     std::vector<std::vector<int>> map = LoadMapFromImage(image, colors);
     
     // Displaying map
@@ -163,11 +172,6 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
             std::cout << *it << " ";
         std::cout << std::endl;
     }*/
-    
-    int total_time = 4*7*24;
-    
-    std::string json_full_path = full_path.append("/data/map.json");
-    std::cout << json_full_path << "\n";
     
     RiskMap risk_map;
     risk_map.map = map;
@@ -180,11 +184,11 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     //Coord from = {517, 412};
     //Coord to = {765, 600};
     Coord from = {517, 412};
-    Coord to = {520, 415};
+    Coord to = {527, 422};
     
     auto start = std::chrono::high_resolution_clock::now();
     
-    BicriteriaDijkstraInstance* inst = new BicriteriaDijkstraInstance(risk_map, from, to, 5, 150);
+    BicriteriaDijkstraInstance* inst = new BicriteriaDijkstraInstance(risk_map, from, to, 2, 150);
 
     std::vector<Path> paths = inst->computeParetoApxPaths();
     
@@ -195,6 +199,16 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
     std::cout << "Duration: " << duration.count() << std::endl;
+
+	if ( !png_filename.empty() )
+	{
+		//m_canvas->LoadImage(png_filename);
+        
+        //wxBitmap bitmap(image);
+        //m_canvas-> SetBackgroundBitmap(bitmap);
+    
+		m_imageLoaded = true ;
+	}
 
     //savePathsToJson("./results/res_nk.json", res_routes);
 

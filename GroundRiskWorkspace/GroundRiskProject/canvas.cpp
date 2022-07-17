@@ -1,18 +1,18 @@
-#include "canvas.h"
+/*#include "canvas.h"
 
 BEGIN_EVENT_TABLE(MyCanvas, wxPanel)
 	EVT_PAINT(MyCanvas::OnPaint)
 END_EVENT_TABLE()
 
 //------------------------------------------------------------------------
-MyCanvas::MyCanvas( wxWindow *parent, wxWindowID id,
-                    const wxPoint &pos, const wxSize &size )
-        : wxPanel( parent, id, pos, size, wxSUNKEN_BORDER)
+//MyCanvas::MyCanvas( wxWindow *parent, wxWindowID id,
+//                    const wxPoint &pos, const wxSize &size )
+//        : wxPanel( parent, id, pos, size, wxSUNKEN_BORDER)
 //------------------------------------------------------------------------
-{
-    m_myImage=NULL;
-	m_imageRGB = NULL ;
-}
+//{
+//    m_myImage=NULL;
+//	m_imageRGB = NULL ;
+//}
 
 //------------------------------------------------------------------------
 MyCanvas::~MyCanvas()
@@ -66,22 +66,6 @@ void MyCanvas::SaveImage(wxString fileName)
 }
 
 //------------------------------------------------------------------------
-void MyCanvas::ProcessImage()
-//------------------------------------------------------------------------
-// example of fast and trivial process (negative)
-// you can replace it with your own
-// you can also use methods from the wxImage class itself
-{
-	long int i = m_imageWidth*m_imageHeight*3 ;
-
-// m_myImage is a monodimentional vector of pixels (RGBRGB...)
-	while (i--)
-		m_myImage[i] = 255 - m_myImage[i] ;
-
-	Refresh(false); // update display
-}
-
-//------------------------------------------------------------------------
 void MyCanvas::BestSize()
 //------------------------------------------------------------------------
 {
@@ -106,3 +90,4 @@ void MyCanvas::OnPaint(wxPaintEvent &WXUNUSED(event))
 		dc.DrawBitmap(m_imageBitmap, 0, 0) ;
 	}
 }
+*/
