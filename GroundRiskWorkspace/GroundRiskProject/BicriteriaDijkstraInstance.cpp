@@ -1,5 +1,5 @@
 #include "BicriteriaDijkstraInstance.h"
-#include "NeighboursIter.h"
+#include "Neighbours.h"
 
 BicriteriaDijkstraInstance::BicriteriaDijkstraInstance(RiskMap& risk_map, Coord from, Coord to,
     int search_limit, float r)
@@ -27,13 +27,12 @@ std::vector<Path> BicriteriaDijkstraInstance::computeParetoApxPaths() {
     paths.push_back(path);
     
     // By default a max heap is created ordered by first element of pair
-    //std::priority_queue<std::pair<std::vector<int>, int>> intervals_queue;
     std::priority_queue<std::pair<int, std::vector<int>>> intervals_queue;
     
     std::vector<int> interval = {0, 1};
     intervals_queue.push(make_pair(0, interval));
     
-    while (!intervals_queue.empty()) {
+    while ((!intervals_queue.empty())&&(paths.size()<3)) {
         std::pair<int, std::vector<int>> pair = intervals_queue.top();
         intervals_queue.pop();
         interval = pair.second;
@@ -44,6 +43,7 @@ std::vector<Path> BicriteriaDijkstraInstance::computeParetoApxPaths() {
         float beta = (float)(path1.risk - path0.risk)/(path1.length_m - path0.length_m);
         
         if (beta < - 0.0000001) {
+            
             Path new_path = this->runWithAlpha(-1.0/beta);
             if (interval.at(1) - interval.at(0) != 1) {
                 std::cerr << "An error with intervals!" << std::endl;
@@ -56,8 +56,8 @@ std::vector<Path> BicriteriaDijkstraInstance::computeParetoApxPaths() {
                 paths.insert(itPos, new_path);
                 
                 std::vector<int> new_interval = {interval.at(1)-1, interval.at(1)};
-                intervals_queue.push(make_pair(interval.at(1), new_interval));
-                intervals_queue.push(make_pair(interval.at(1)-1, new_interval));
+                intervals_queue.push(std::make_pair(interval.at(1), new_interval));
+                intervals_queue.push(std::make_pair(interval.at(1)-1, new_interval));
             }
         }
     }
@@ -71,9 +71,6 @@ Path BicriteriaDijkstraInstance::runWithAlpha(float alpha) {
     std::unordered_map<Coord, float, hash_fn> labels;
     std::unordered_map<Coord, Coord, hash_fn> previous_nodes;
     
-//        let mut pq: PriorityQueue<_, Reverse<OrderedFloat<f64>>, DefaultHashBuilder> = 
-//          PriorityQueue::<_, Reverse<OrderedFloat<f64>>, DefaultHashBuilder>::with_default_hasher();
-
     struct comparator {
         bool operator()(
             std::pair<Coord, float>& a,
@@ -93,7 +90,6 @@ Path BicriteriaDijkstraInstance::runWithAlpha(float alpha) {
 
     while (!pq.empty()) {
 
-        
         Coord current_node = pq.top().first;
         if (current_node == this->to) {
             //std::cout << "!!!current_node == this->to!!!\n";
@@ -148,7 +144,7 @@ Path BicriteriaDijkstraInstance::unwrapPath(std::unordered_map<Coord, Coord, has
                                             std::unordered_map<Coord, float, hash_fn> nodes_labels,
                                             float alpha) {
     std::cout << "unwrapPath\n";
-    std::vector<Coord>  path;
+    std::vector<Coord> path;
     int total_risk = 0;
     float total_length = 0.0;
 
@@ -167,9 +163,3 @@ Path BicriteriaDijkstraInstance::unwrapPath(std::unordered_map<Coord, Coord, has
 
     return ((struct Path) {path, nodes_labels.at(this->to), total_risk, total_length, alpha});
 }
-
-//impl Display for Path {
-//    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-//        write!(f, "linear_weight: {}, risk: {}, length: {}, path: {:?}", &self.linear_combination_weight, &self.risk, &self.length_m, &self.path)
-//    }
-//}

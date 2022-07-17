@@ -1,5 +1,6 @@
 #include "RiskMap.h"
-#include "NeighboursIter.h"
+#include "Neighbours.h"
+#include "ParallelogramPixels.h"
 
 #include <math.h> 
 
@@ -29,54 +30,7 @@ int RiskMap::width() {
     return w;
 }
 
-std::vector<Coord> RiskMap::parallelogramFromTwoPoints(Coord p1, Coord p2, float r_m, float m_per_pixel) {
-    
-    float y_diff = -(p2.y-p1.y);
-    float x_diff = (p2.x-p1.x);
-    
-    Coord point1_temp = {0,0}, point2_temp = {0,0}; //remove
-    std::vector<Coord> temp = {point1_temp, point2_temp}; //remove
-    return temp; //remove
-}
-//        let y_diff = -(p2.y-p1.y) as f64;
-//        let x_diff = (p2.x-p1.x) as f64;
-//        let slope = y_diff.atan2(x_diff);
-//        let rect_width = (r_m /m_per_pixel).ceil();
 
-//        let orig_p1 = Coord{
-//            x: p1.x as f64 + slope.sin() * rect_width,
-//            y: p1.y as f64 + slope.cos() * rect_width
-//        };
-
-//        let orig_p2 = Coord{
-//            x: p1.x as f64 + (slope + std::f64::consts::PI).sin() * rect_width,
-//            y: p1.y as f64 + (slope + std::f64::consts::PI).cos() * rect_width
-//        };
-
-//        let dest_p1 = Coord{
-//            x: p2.x as f64 + slope.sin() * rect_width,
-//            y: p2.y as f64 + slope.cos() * rect_width
-//        };
-
-//        let dest_p2 = Coord{
-//            x: p2.x as f64 + (slope + std::f64::consts::PI).sin() * rect_width,
-//            y: p2.y as f64 + (slope + std::f64::consts::PI).cos() * rect_width
-//        };
-
-//        return ((orig_p1, orig_p2), (dest_p1, dest_p2))
-//    }
-
-
-int RiskMap::risk(Coord p1, Coord p2, float r_m) {
-    std::vector<Coord> sides = this->parallelogramFromTwoPoints(p1, p2, r_m, this->m_per_pixel);
-    Coord orig_side = sides.at(0);
-    Coord dest_side = sides.at(1);
-    
-    //int r = this->parallelogramRisk(orig_side, dest_side);
-    int r = 0; //remove
-    return r;
-}
-   
 float RiskMap::lengthM(Coord p1, Coord p2) {
     float x_diff = (p1.x - p2.x);
     float y_diff = (p1.y - p2.y);
@@ -85,7 +39,70 @@ float RiskMap::lengthM(Coord p1, Coord p2) {
     return length_px * this->m_per_pixel + 0.0000001;
 }
 
+
 Neighbours RiskMap::neighboursWithin(Coord p, int search_limit) {
     Neighbours* neighbours = new Neighbours(this, search_limit, p);
     return *neighbours;
 }
+
+
+int RiskMap::risk(Coord p1, Coord p2, float r_m) {
+    std::pair<Side, Side>  sides = this->parallelogramFromTwoPoints(p1, p2, r_m, this->m_per_pixel);
+    int r = this->parallelogramRisk(sides.first, sides.second);
+    return r;
+}
+   
+
+std::pair<Side, Side> RiskMap::parallelogramFromTwoPoints(Coord p1, Coord p2, float r_m, float m_per_pixel) {
+    
+    float y_diff = -(p2.y-p1.y);
+    float x_diff = (p2.x-p1.x);
+    
+    float slope = atan2(y_diff, x_diff);
+    int rect_width = ceil((r_m /m_per_pixel));
+    
+    Coord orig_p1 = {
+        p1.x + sin(slope) * rect_width,
+        p1.y + cos(slope) * rect_width
+    };
+    
+    Coord orig_p2 = {
+        p1.x + sin(slope + M_PI) * rect_width,
+        p1.y + cos(slope + M_PI) * rect_width
+    };
+
+    Coord dest_p1 = {
+        p2.x + sin(slope) * rect_width,
+        p2.y + cos(slope) * rect_width
+    };
+    
+
+    Coord dest_p2 = {
+        p2.x + sin(slope + M_PI) * rect_width,
+        p2.y + cos(slope + M_PI) * rect_width
+    };
+
+    return std::make_pair(std::make_pair(orig_p1, orig_p2), std::make_pair(dest_p1, dest_p2));
+}
+
+
+int RiskMap::parallelogramRisk(Side origin_side, Side destination_side) {
+    int pop = 0;
+    
+    ParallelogramPixels* rect = new ParallelogramPixels(origin_side, destination_side);
+    
+    for (auto coord: *rect) {
+        if (0 <= coord.x && coord.x < width() && 0 <= coord.y && coord.y < height()) {
+                pop = pop + riskAt(coord);
+        }
+    }
+    
+    delete rect;
+    return pop;
+}
+
+int RiskMap::riskAt(Coord coord) {
+    return map.at(coord.y).at(coord.x);
+}
+
+

@@ -2,9 +2,10 @@
 #define RISKMAP_H
 
 #include "risks.h"
-#include "NeighboursIter.h"
+#include "Neighbours.h"
 
 #include <bits/stdc++.h>
+#include <utility> //make_pair
 
 class RiskMap
 {
@@ -15,10 +16,14 @@ public:
     int height();
     int width();
     
-    std::vector<Coord> parallelogramFromTwoPoints(Coord p1, Coord p2, float r_m, float m_per_pixel);
-    int risk(Coord p1, Coord p2, float r_m);
     float lengthM(Coord p1, Coord p2);
+    
     Neighbours neighboursWithin(Coord p, int search_limit);
+    
+    int risk(Coord p1, Coord p2, float r_m);
+    std::pair<Side, Side> parallelogramFromTwoPoints(Coord p1, Coord p2, float r_m, float m_per_pixel);
+    int parallelogramRisk(Side orig_side, Side destination_side);
+    int riskAt(Coord coord);
     
     std::vector<std::vector<int>> map;
     float m_per_pixel;

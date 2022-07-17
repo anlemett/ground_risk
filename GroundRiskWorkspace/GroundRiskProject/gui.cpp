@@ -1,12 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////
 // C++ code generated with wxFormBuilder (version Nov  5 2013)
 // http://www.wxformbuilder.org/
-//
-// PLEASE DO "NOT" EDIT THIS FILE!
 ///////////////////////////////////////////////////////////////////////////
 
 #include "gui.h"
-#include "AirRiskInstance.h"
 #include "BicriteriaDijkstraInstance.h"
 #include "risks.h"
 
@@ -16,9 +13,6 @@
 
 BEGIN_EVENT_TABLE(MainFrameBase, wxFrame)
 	EVT_MENU(ID_LOAD,  MainFrameBase::OnOpenImage)
-	EVT_MENU(ID_SAVE,  MainFrameBase::OnSaveImage)
-	EVT_MENU(ID_PROCESS,  MainFrameBase::OnProcessImage)
-	EVT_MENU(ID_BEST_SIZE,  MainFrameBase::OnBestSize)
     EVT_MENU(ID_QUIT,  MainFrameBase::OnQuit)
 	EVT_CLOSE(MainFrameBase::OnClose)
 
@@ -45,6 +39,7 @@ std::istream& operator>>(std::istream& is, std::vector<int>& vec)
     return is;
 }
 
+// for result json ???
 std::istream& operator>>(std::istream& is, std::vector<std::vector<int>>& m)
 {
     //#1 - check if it starts from '['
@@ -86,38 +81,8 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& t)
 MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxFrame( parent, id, title, pos, size, style )
 {
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
-    
-    // old:
-	
-	//m_menuBar = new wxMenuBar( 0 );
-	//m_menuFile = new wxMenu();
-	//wxMenuItem* menuFileExit;
-	//menuFileExit = new wxMenuItem( m_menuFile, wxID_EXIT, wxString( _("E&xit") ) + wxT('\t') + wxT("Alt+X"), wxEmptyString, wxITEM_NORMAL );
-	//m_menuFile->Append( menuFileExit );
-	
-	//m_menuBar->Append( m_menuFile, _("&File") ); 
-	
-	//this->SetMenuBar( m_menuBar );
-	
-	//wxBoxSizer* mainSizer;
-	//mainSizer = new wxBoxSizer( wxVERTICAL );
-	
-	//this->SetSizer( mainSizer );
-	//this->Layout();
-	//m_statusBar = this->CreateStatusBar( 1, wxST_SIZEGRIP, wxID_ANY );
-	
-	//this->Centre( wxBOTH );
-	
-	// Connect Events
-	//this->Connect( wxEVT_CLOSE_WINDOW, wxCloseEventHandler( MainFrameBase::OnCloseFrame ) );
-	//this->Connect( menuFileExit->GetId(), wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler( MainFrameBase::OnExitClick ) );
-    
-    // new
     wxMenu *file_menu = new wxMenu();
 	file_menu->Append(ID_LOAD, _T("&Open image..."));
-	file_menu->Append(ID_PROCESS, _T("&Process image"));
-	file_menu->Append(ID_SAVE, _T("&Save image as..."));
-	file_menu->Append(ID_BEST_SIZE, _T("&Best size"));
 	file_menu->AppendSeparator();
 	file_menu->Append(ID_QUIT, _T("&Exit"));
 
@@ -145,14 +110,6 @@ void MainFrameBase::OnClose(wxCloseEvent& event)
 {
 	delete m_canvas ;
 	event.Skip() ;
-}
-
-//------------------------------------------------------------------------
-void MainFrameBase::OnProcessImage(wxCommandEvent& WXUNUSED(event))
-//------------------------------------------------------------------------
-{
-	if (m_imageLoaded)
-	    m_canvas->ProcessImage() ;
 }
 
 //------------------------------------------------------------------------
@@ -212,13 +169,6 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     std::string json_full_path = full_path.append("/data/map.json");
     std::cout << json_full_path << "\n";
     
-    AirRiskInstance air_risk_instance = LoadAirRiskMap(json_full_path, total_time);
-    
-    //std::cout << "Json file: " << air_risk_instance.map << std::endl;
-    
-    assert(map.at(0).size()==air_risk_instance.map.size());
-    assert(map.size()==air_risk_instance.map.at(0).size());
-
     RiskMap risk_map;
     risk_map.map = map;
     risk_map.m_per_pixel = 1000.0/(131.0/2.0);
@@ -240,54 +190,14 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     
     std::cout << paths << std::endl;
 
-    //println!("{:?}", paths);
-
-    std::vector<HFRMPath> res_routes;
-
-    for (auto &path : paths) {
-        float air_risk = air_risk_instance.ComputeAirRisk(path);
-        HFRMPath hfrm_path = {path.path, air_risk, path.risk, path.length_m, path.alpha};
-        //std::cout << hfrm_path.route << " ";
-        std::cout << hfrm_path.air_risk << " " << hfrm_path.ground_risk;
-        std::cout << " " << hfrm_path.length_m << " " << hfrm_path.alpha << "\n";
-        //res_routes.push_back(hfrm_path);
-    }
-    //for path in paths {
-        //let air_risk = air_risk_instance.compute_air_risk(&path);
-        //res_routes.push(HFRMPath{
-            //route: path.path,/
-            //air_risk: air_risk,
-            //ground_risk: path.risk as f64,
-            //length_m: path.length_m,
-            //alpha: path.alpha
-        //})
-    //}
-
     delete inst;
     
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    std::cout << duration.count() << std::endl;
+    std::cout << "Duration: " << duration.count() << std::endl;
 
-    //save_paths_to_json("./results/res_nk.json", &res_routes);
+    //savePathsToJson("./results/res_nk.json", res_routes);
 
-}
-
-
-//------------------------------------------------------------------------
-AirRiskInstance MainFrameBase::LoadAirRiskMap(std::string json_full_path, int total_time)
-//------------------------------------------------------------------------
-{
-    std::ifstream json_file;
-    json_file.open (json_full_path);
-    
-    AirRiskInstance air_risk_instance;
-    
-    json_file >> air_risk_instance.map;
-    json_file.close();
-    
-    air_risk_instance.total_time_s = total_time;
-    return air_risk_instance;
 }
 
 
@@ -331,27 +241,6 @@ std::vector<std::vector<int>> MainFrameBase::LoadMapFromImage(wxImage& image, Co
     return map;
 }
 
-
-//------------------------------------------------------------------------
-void MainFrameBase::OnSaveImage(wxCommandEvent & WXUNUSED(event))
-//------------------------------------------------------------------------
-{
-//	char str[128] = "" ; // proposed file name
-
-	if (!m_imageLoaded)
-		return ;
-
-	wxString filename = wxFileSelector(_T("Save image as"),_T(""),_T(""),_T("*.bmp"), _T("BMP files (*.bmp)|*.bmp|GIF files (*gif)|*.gif|JPEG files (*jpg)|*.jpg|PNG files (*png)|*.png|TIFF files (*tif)|*.tif|XPM files (*xpm)|*.xpm|All files (*.*)|*.*"), wxFD_SAVE );
-	if ( !filename.empty() )
-		m_canvas->SaveImage(filename) ;
-}
-
-//------------------------------------------------------------------------
-void MainFrameBase::OnBestSize(wxCommandEvent& WXUNUSED(event))
-//------------------------------------------------------------------------
-{
-    m_canvas->BestSize() ;
-}
 
 MainFrameBase::~MainFrameBase()
 {

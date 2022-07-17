@@ -44,7 +44,6 @@
 
 #include "canvas.h"
 #include "risks.h"
-#include "AirRiskInstance.h"
 
 #include <string>
 #include <map>
@@ -55,8 +54,6 @@
 #include <assert.h>
 #include <chrono>
 
-///////////////////////////////////////////////////////////////////////////
-
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class MainFrameBase
@@ -64,10 +61,7 @@
 enum
 {
     ID_QUIT = 1,
-	ID_LOAD,
-	ID_SAVE,
-	ID_PROCESS,
-	ID_BEST_SIZE
+	ID_LOAD
 };
 
 class MyCanvas;
@@ -77,9 +71,7 @@ class MainFrameBase : public wxFrame
     private:
 
         std::vector<std::vector<int>> LoadMapFromImage(wxImage& image, ColorsMapType& colors);
-        
-        AirRiskInstance LoadAirRiskMap(std::string json_full_path, int total_time);
-        
+                
 	protected:
 		wxMenuBar* m_menuBar;
 		wxMenu* m_menuFile;
@@ -91,12 +83,8 @@ class MainFrameBase : public wxFrame
         
         //new
         void OnQuit(wxCommandEvent& event);
-        void OnAbout(wxCommandEvent& event);
         void OnOpenImage(wxCommandEvent& WXUNUSED(event) ) ;
-        void OnSaveImage(wxCommandEvent & WXUNUSED(event)) ;
-        void OnProcessImage(wxCommandEvent& WXUNUSED(event) ) ;
         void OnClose(wxCloseEvent& event) ;
-        void OnBestSize(wxCommandEvent& WXUNUSED(event)) ;
 
         MyCanvas *m_canvas; // the canvas inside the main frame
         bool m_imageLoaded ;

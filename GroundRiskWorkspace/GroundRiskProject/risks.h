@@ -20,7 +20,7 @@ struct Coord {
     }
     
     friend std::ostream& operator << (std::ostream& os, const Coord& coord) {
-        os << "("<< coord.x << ", " << coord.y << ") " << std::endl;
+        os << "("<< coord.x << ", " << coord.y << ") ";
         return os;
     }
 
@@ -39,12 +39,14 @@ struct Coord {
     }
 };
 
+typedef std::pair<Coord, Coord> Side;
+
 // https://www.techiedelight.com/use-struct-key-std-unordered_map-cpp/
 // The specialized hash function for `unordered_map` keys
 struct hash_fn
 {
     std::size_t operator() (const Coord &p) const
-    {
+   {
         std::size_t h1 = std::hash<int>()(p.x);
         std::size_t h2 = std::hash<int>()(p.y);
  
@@ -53,7 +55,7 @@ struct hash_fn
 };
 
 struct Path {
-    std::vector<Coord>  path;
+    std::vector<Coord> path;
     float linear_combination_weight;
     int risk;
     float length_m;
@@ -71,21 +73,16 @@ struct Path {
     }
     
     friend std::ostream& operator << (std::ostream& os, const Path& path) {
-        os << "Path: ";
+        os << "\nPath: ";
         for (auto element: path.path)
             std::cout << element << " ";
         os << std::endl;
+        os << "Ground risk: " << path.risk << std::endl;
+        os << "Length: " << path.length_m << std::endl;
+        os << "Alpha: " << path.alpha << std::endl;
+
         return os;
     }
-};
-
-
-struct HFRMPath {
-    std::vector<Coord>  route;
-    float air_risk;
-    float ground_risk;
-    float length_m;
-    float alpha;
 };
 
 #endif //__RISKS_H__
