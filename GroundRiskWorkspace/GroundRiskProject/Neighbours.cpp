@@ -2,7 +2,7 @@
 #include "RiskMap.h"
 
 // NeighboursIter
-NeighboursIter::NeighboursIter(Coord p, Coord current_point, int x_from, int y_from, int x_to, int y_to, int mapOffset)
+NeighboursIter::NeighboursIter(Coord<int> p, Coord<int> current_point, int x_from, int y_from, int x_to, int y_to, int mapOffset)
 {
     this->p = p;
     this->mapOffset = mapOffset;
@@ -29,11 +29,11 @@ bool NeighboursIter::operator!= (const NeighboursIter& rhs) {
     return !(*this == rhs);
 };
     
-Coord& NeighboursIter::operator*() const { 
+Coord<int>& NeighboursIter::operator*() const { 
     return *current_point_ptr; 
 }
 
-Coord* NeighboursIter::operator->() {
+Coord<int>* NeighboursIter::operator->() {
     return current_point_ptr;
 }
 
@@ -58,7 +58,7 @@ void NeighboursIter::next() {
 
     if (this->current_point.y > this->y_to) {
         std::cout << "!!this->current_point.y > this->y_to!!" << this->current_point.y << " " << this->y_to << "\n";
-        current_point = Coord(this->x_to, this->y_to);
+        current_point = Coord<int>(this->x_to, this->y_to);
         return;
     }
 
@@ -84,7 +84,7 @@ void NeighboursIter::propagate() {
 
 
 // Neighbours
-Neighbours::Neighbours(RiskMap* map, int search_limit, Coord p)
+Neighbours::Neighbours(RiskMap* map, int search_limit, Coord<int> p)
 {
     this->map = map;
     this->search_limit = search_limit;
@@ -105,14 +105,12 @@ Neighbours::~Neighbours()
 }
 
 NeighboursIter Neighbours::begin() { 
-    
-    Coord current_point = Coord(this->x_from, this->y_from);
+    Coord<int> current_point = Coord<int>(this->x_from, this->y_from);
     return NeighboursIter(this->p, current_point, this->x_from, this->y_from, this->x_to, this->y_to, this->map->offset);
 }
  
  
 NeighboursIter Neighbours::end() {//used to determine when the boundary has been reached: it should not be accessed directly
-
-    Coord current_point = Coord(this->x_to, this->y_to);
+    Coord<int> current_point = Coord<int>(this->x_to, this->y_to);
     return NeighboursIter(this->p, current_point, this->x_from, this->y_from, this->x_to, this->y_to, this->map->offset);   
 }

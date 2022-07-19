@@ -17,7 +17,7 @@ struct BicriteriaDijkstra {
 class BicriteriaDijkstraInstance
 {
 public:
-    BicriteriaDijkstraInstance(RiskMap& risk_map, Coord from, Coord to,
+    BicriteriaDijkstraInstance(RiskMap& risk_map, Coord<int> from, Coord<int> to,
                                int search_limit, float r);
     ~BicriteriaDijkstraInstance();
     
@@ -25,14 +25,14 @@ public:
     
     Path runWithAlpha(float alpha);
     
-    Path unwrapPath(std::unordered_map<Coord, Coord, hash_fn> nodes_previous,
-                    std::unordered_map<Coord, float, hash_fn> nodes_labels,
+    Path unwrapPath(std::unordered_map<Coord<int>, Coord<int>, hash_fn> nodes_previous,
+                    std::unordered_map<Coord<int>, float, hash_fn> nodes_labels,
                     float alpha);
 
 private:
     RiskMap risk_map;
-    Coord from;
-    Coord to;
+    Coord<int> from;
+    Coord<int> to;
     int search_limit;
     float r_m;
 };

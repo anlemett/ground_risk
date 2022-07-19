@@ -7,45 +7,66 @@
 
 typedef std::map<std::vector<unsigned char>, int> ColorsMapType;
 
+template <typename T> 
 struct Coord {
-    int x;
-    int y;
+    T x;
+    T y;
     
     Coord() {
     }   
     
-    Coord(int x, int y) {
+    Coord(T x, T y) {
         this->x = x;
         this->y = y;
     }
     
-    friend std::ostream& operator << (std::ostream& os, const Coord& coord) {
+    friend std::ostream& operator << (std::ostream& os, const Coord<T>& coord) {
         os << "("<< coord.x << ", " << coord.y << ") ";
         return os;
     }
 
-    bool operator==(const Coord& p) const {
+    bool operator==(const Coord<int>& p) const {
         return (x == p.x && y == p.y);
     }
     
-    bool operator!=(const Coord& p) const {
+    bool operator!=(const Coord<int>& p) const {
         return (x != p.x || y != p.y);
     }
 
-    Coord& operator =(const Coord& p) {
+    bool operator==(const Coord<float>& p) const {
+        return ((float)x == p.x && (float)y == p.y);
+    }
+    
+    bool operator!=(const Coord<float>& p) const {
+        return ((float)x != p.x || (float)y != p.y);
+    }
+
+    Coord& operator =(const Coord<T>& p) {
         x = p.x;
         y = p.y;
         return *this;
     }
+    
+    void round_if_needed() {
+        // A dirty hack to avoid numerical problems
+        //FIXME: do something more reliable
+        if (abs(round(x) - x) < 0.0001) {
+            x = round(x);
+        }
+
+        if (abs(round(y) - y) < 0.0001) {
+            y = round(y);
+        }
+    }
 };
 
-typedef std::pair<Coord, Coord> Side;
+typedef std::pair<Coord<float>, Coord<float>> Side;
 
 // https://www.techiedelight.com/use-struct-key-std-unordered_map-cpp/
 // The specialized hash function for `unordered_map` keys
 struct hash_fn
 {
-    std::size_t operator() (const Coord &p) const
+    std::size_t operator() (const Coord<int> &p) const
    {
         std::size_t h1 = std::hash<int>()(p.x);
         std::size_t h2 = std::hash<int>()(p.y);
@@ -55,7 +76,7 @@ struct hash_fn
 };
 
 struct Path {
-    std::vector<Coord> path;
+    std::vector<Coord<int>> path;
     float linear_combination_weight;
     int risk;
     float length_m;
@@ -64,7 +85,7 @@ struct Path {
     Path() {
     }
     
-    Path(std::vector<Coord>  path, float linear_combination_weight, int risk, float length_m, float alpha) {
+    Path(std::vector<Coord<int>>  path, float linear_combination_weight, int risk, float length_m, float alpha) {
         this->path = path;
         this->linear_combination_weight = linear_combination_weight;
         this->risk = risk;

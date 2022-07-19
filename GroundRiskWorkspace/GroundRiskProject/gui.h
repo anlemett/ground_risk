@@ -56,109 +56,34 @@
 ///////////////////////////////////////////////////////////////////////////////
 /// Class MainFrameBase
 ///////////////////////////////////////////////////////////////////////////////
-enum
-{
-    ID_QUIT = 1,
-	ID_LOAD
-};
-
-//class MyCanvas;
 class MyBitmapPanel;
 
 class MainFrameBase : public wxFrame 
 {
-    private:
-
-        std::vector<std::vector<int>> LoadMapFromImage(wxImage& image, ColorsMapType& colors);
+    public:
+		
+		MainFrameBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxEmptyString, 
+                       const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 1000,600 ), 
+                       long style = wxCLOSE_BOX|wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
+		
+		~MainFrameBase();
                 
 	protected:
-		wxMenuBar* m_menuBar;
-		wxMenu* m_menuFile;
-		wxStatusBar* m_statusBar;
 		
 		// Virtual event handlers, overide them in your derived class
 		virtual void OnCloseFrame( wxCloseEvent& event ) { event.Skip(); }
 		virtual void OnExitClick( wxCommandEvent& event ) { event.Skip(); }
         
-        //new
-        void OnQuit(wxCommandEvent& event);
-        void OnOpenImage(wxCommandEvent& WXUNUSED(event) ) ;
         void OnClose(wxCloseEvent& event) ;
-
-        //MyCanvas *m_canvas; // the canvas inside the main frame
-        bool m_imageLoaded ;
+        void OnOpenImage(wxCommandEvent& WXUNUSED(event) ) ;
+        
         DECLARE_EVENT_TABLE()
-		
-	
-	public:
-		
-		MainFrameBase( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxEmptyString, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 500,300 ), long style = wxCLOSE_BOX|wxDEFAULT_FRAME_STYLE|wxTAB_TRAVERSAL );
-		
-		~MainFrameBase();
-	
+			
+    private:
 
-/************************/
-
-public:
- /*   MyFrame() : wxFrame(NULL, wxID_ANY, "Test")
-    {
-        const int borderAround = FromDIP(10);
-        
-        wxBoxSizer* bSizer = new wxBoxSizer(wxVERTICAL);
-
-        wxButton* button = new wxButton(this, wxID_ANY, "Load image file...");
-        bSizer->Add(button, wxSizerFlags().Expand().Border(wxALL, borderAround));
-        button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &MyFrame::OnLoadImageFile, this);
-
-        m_bitmapPanel = new MyBitmapPanel(this);
-        bSizer->Add(m_bitmapPanel, wxSizerFlags().Expand().Proportion(1).Border(wxALL, borderAround));
-        
-        SetSizer(bSizer);
-    }	*/
-private:
-    MyBitmapPanel* m_bitmapPanel;
+        std::vector<std::vector<int>> LoadMapFromImage(wxImage& image, ColorsMapType& colors);
     
-    void OnLoadImageFile(wxCommandEvent&)
-    {
-        static wxString fileName;
-        wxImage image;
-        
-        char result[PATH_MAX];
-        ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-        const char *path;
-        if (count != -1) {
-            path = dirname(result);
-        }
-    
-        std::string full_path = path;
-        std::string png_full_path = full_path;
-        png_full_path = png_full_path.append("/data/density_fixed_scaled.png");
-        fileName = png_full_path;
-
-
-        if ( fileName.empty() )
-            return;
-                
-        if ( image.LoadFile(fileName) )
-        {   
-                        
-            Coord from = {517, 412};
-            Coord to = {567, 462};
-            for (int i= from.x-5; i<from.x+5;i++)
-                for (int j=from.y-5; j<from.y+5;j++) 
-                    image.SetRGB(i, j, 255,0,0);
-                    
-            for (int i= to.x-5; i<to.x+5;i++)
-                for (int j=to.y-5; j<to.y+5;j++) 
-                    image.SetRGB(i, j, 255,0,0);
-
-            m_bitmapPanel->SetBitmap(wxBitmap(image));
-            SetTitle(wxString::Format("Simple Image Viewer (%s: %d x %d pixels)", 
-                wxFileName(fileName).GetFullName(), image.GetWidth(), image.GetHeight()));                
-        }                
-    }
+        MyBitmapPanel* m_bitmapPanel;
 };
 
-
- /********************************/
 #endif //__GUI_H__

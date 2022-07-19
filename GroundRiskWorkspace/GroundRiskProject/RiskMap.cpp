@@ -31,7 +31,7 @@ int RiskMap::width() {
 }
 
 
-float RiskMap::lengthM(Coord p1, Coord p2) {
+float RiskMap::lengthM(Coord<int> p1, Coord<int> p2) {
     float x_diff = (p1.x - p2.x);
     float y_diff = (p1.y - p2.y);
     float length_px_squared = pow(y_diff, 2) + pow(x_diff, 2);
@@ -40,20 +40,21 @@ float RiskMap::lengthM(Coord p1, Coord p2) {
 }
 
 
-Neighbours RiskMap::neighboursWithin(Coord p, int search_limit) {
+Neighbours RiskMap::neighboursWithin(Coord<int> p, int search_limit) {
     Neighbours* neighbours = new Neighbours(this, search_limit, p);
     return *neighbours;
 }
 
 
-int RiskMap::risk(Coord p1, Coord p2, float r_m) {
+int RiskMap::risk(Coord<int> p1, Coord<int> p2, float r_m) {
+    std::cout << "RiskMap::risk\n";
     std::pair<Side, Side>  sides = this->parallelogramFromTwoPoints(p1, p2, r_m, this->m_per_pixel);
     int r = this->parallelogramRisk(sides.first, sides.second);
     return r;
 }
    
 
-std::pair<Side, Side> RiskMap::parallelogramFromTwoPoints(Coord p1, Coord p2, float r_m, float m_per_pixel) {
+std::pair<Side, Side> RiskMap::parallelogramFromTwoPoints(Coord<int> p1, Coord<int> p2, float r_m, float m_per_pixel) {
     
     float y_diff = -(p2.y-p1.y);
     float x_diff = (p2.x-p1.x);
@@ -61,26 +62,27 @@ std::pair<Side, Side> RiskMap::parallelogramFromTwoPoints(Coord p1, Coord p2, fl
     float slope = atan2(y_diff, x_diff);
     int rect_width = ceil((r_m /m_per_pixel));
     
-    Coord orig_p1 = {
+    Coord<float> orig_p1 = {
         p1.x + sin(slope) * rect_width,
         p1.y + cos(slope) * rect_width
     };
     
-    Coord orig_p2 = {
+    Coord<float> orig_p2 = {
         p1.x + sin(slope + M_PI) * rect_width,
         p1.y + cos(slope + M_PI) * rect_width
     };
 
-    Coord dest_p1 = {
+    Coord<float> dest_p1 = {
         p2.x + sin(slope) * rect_width,
         p2.y + cos(slope) * rect_width
     };
     
-
-    Coord dest_p2 = {
+    Coord<float> dest_p2 = {
         p2.x + sin(slope + M_PI) * rect_width,
         p2.y + cos(slope + M_PI) * rect_width
     };
+    
+    //std::cout<<orig_p1<<" "<<orig_p2<<" "<< dest_p1<<" "<< dest_p2 <<"\n";
 
     return std::make_pair(std::make_pair(orig_p1, orig_p2), std::make_pair(dest_p1, dest_p2));
 }
@@ -91,17 +93,23 @@ int RiskMap::parallelogramRisk(Side origin_side, Side destination_side) {
     
     ParallelogramPixels* rect = new ParallelogramPixels(origin_side, destination_side);
     
+    //std::cout << "inside parallelogramRisk"<< rect->l << " " << rect->t << " " << rect->b<< " "<<rect->r << "\n";
+    
     for (auto coord: *rect) {
+        //std::cout << "coord inside for: " << coord << "\n";
         if (0 <= coord.x && coord.x < width() && 0 <= coord.y && coord.y < height()) {
-                pop = pop + riskAt(coord);
+            //std::cout << riskAt(coord) << " ";
+            pop = pop + riskAt(coord);
         }
     }
+    //std::cout << "\n";
     
     delete rect;
     return pop;
 }
 
-int RiskMap::riskAt(Coord coord) {
+int RiskMap::riskAt(Coord<int> coord) {
+    //std::cout << "x: "  << coord.x << " y: " << coord.y << " Map at x,y: "<< map.at(coord.y).at(coord.x) << " ";
     return map.at(coord.y).at(coord.x);
 }
 

@@ -16,14 +16,14 @@ public:
     int height();
     int width();
     
-    float lengthM(Coord p1, Coord p2);
+    float lengthM(Coord<int> p1, Coord<int> p2);
     
-    Neighbours neighboursWithin(Coord p, int search_limit);
+    Neighbours neighboursWithin(Coord<int> p, int search_limit);
     
-    int risk(Coord p1, Coord p2, float r_m);
-    std::pair<Side, Side> parallelogramFromTwoPoints(Coord p1, Coord p2, float r_m, float m_per_pixel);
+    int risk(Coord<int> p1, Coord<int> p2, float r_m);
+    std::pair<Side, Side> parallelogramFromTwoPoints(Coord<int> p1, Coord<int> p2, float r_m, float m_per_pixel);
     int parallelogramRisk(Side orig_side, Side destination_side);
-    int riskAt(Coord coord);
+    int riskAt(Coord<int> coord);
     
     std::vector<std::vector<int>> map;
     float m_per_pixel;

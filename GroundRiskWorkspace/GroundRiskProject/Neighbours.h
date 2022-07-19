@@ -14,31 +14,31 @@ class RiskMap;
 class NeighboursIter
 {
 public:
-    NeighboursIter(Coord p, Coord current_point, int x_from, int y_from, int x_to, int y_to, int mapOffset);
+    NeighboursIter(Coord<int> p, Coord<int> current_point, int x_from, int y_from, int x_to, int y_to, int mapOffset);
     ~NeighboursIter();
 
     //https://anderberg.me/2016/07/04/c-custom-iterators/
     using iterator_category = std::forward_iterator_tag;
     using difference_type   = std::ptrdiff_t;
-    
-    
+        
     bool operator== (const NeighboursIter& rhs);
     bool operator!= (const NeighboursIter& rhs);
     
-    Coord& operator*() const;
-    Coord* operator->();
+    Coord<int>& operator*() const;
+    Coord<int>* operator->();
 
     // Prefix increment
     NeighboursIter& operator++();
     // Postfix increment
     NeighboursIter operator++(int);
 
+private: 
+
     void next();
         
     void propagate();
 
-private: 
-    Coord p;
+    Coord<int> p;
 
     int x_from;
     int x_to;
@@ -47,14 +47,14 @@ private:
     
     int mapOffset;
     
-    Coord current_point;
-    Coord* current_point_ptr;
+    Coord<int> current_point;
+    Coord<int>* current_point_ptr;
 };
 
 class Neighbours
 {
 public:
-    Neighbours(RiskMap* map, int search_limit, Coord p);
+    Neighbours(RiskMap* map, int search_limit, Coord<int> p);
     ~Neighbours();
     
     NeighboursIter begin();
@@ -62,7 +62,7 @@ public:
  
     RiskMap* map;
     int search_limit;
-    Coord p;
+    Coord<int> p;
     int x_from;
     int x_to;
     int y_from;

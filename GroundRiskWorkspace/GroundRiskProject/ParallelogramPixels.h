@@ -10,7 +10,7 @@
 class ParallelogramPixelsIter
 {
 public:
-    ParallelogramPixelsIter(Coord l, Coord r, Coord b, Coord t, Coord current_point);
+    ParallelogramPixelsIter(Coord<float> l, Coord<float> r, Coord<float> b, Coord<float> t, Coord<int> current_point);
     ~ParallelogramPixelsIter();
    
     //https://anderberg.me/2016/07/04/c-custom-iterators/
@@ -21,9 +21,9 @@ public:
 
     bool operator!= (const ParallelogramPixelsIter& rhs);
     
-    Coord& operator*() const;
+    Coord<int>& operator*() const;
     
-    Coord* operator->();
+    Coord<int>* operator->();
 
     // Prefix increment
     ParallelogramPixelsIter& operator++();
@@ -36,17 +36,18 @@ private:
  
     std::pair<int, int> yRange(); //add float x ?
     
-    int getMinY(Coord p0, Coord p1, float x); // float x ??
-    int getMaxY(Coord p0, Coord p1, float x); // float x ??
+    int getMinY(Coord<float> p0, Coord<float> p1, float x); // float x ??
+    int getMaxY(Coord<float> p0, Coord<float> p1, float x); // float x ??
 
-    Coord l; //<float>
-    Coord r; //<float>
-    Coord b; //<float>
-    Coord t; //<float>
+    Coord<float> l;
+    Coord<float> r;
+    Coord<float> b;
+    Coord<float> t;
 
+    bool iter_end;
     std::pair<int, int> current_range;    
-    Coord current_point;
-    Coord* current_point_ptr;
+    Coord<int> current_point;
+    Coord<int>* current_point_ptr;
 };
 
 
@@ -59,14 +60,15 @@ public:
     ParallelogramPixelsIter begin();
     ParallelogramPixelsIter end();
     
-private:
+//private:
+public: //temp
     Side origin_side;
     Side destination_side;
     
-    Coord l; //<float>
-    Coord r; //<float>
-    Coord b; //<float>
-    Coord t; //<float>
+    Coord<float> l;
+    Coord<float> r;
+    Coord<float> b;
+    Coord<float> t;
 };
 
 #endif // PARALLELOGRAMPIXELS_H

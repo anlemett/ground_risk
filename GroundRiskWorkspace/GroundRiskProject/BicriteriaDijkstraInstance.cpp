@@ -1,7 +1,7 @@
 #include "BicriteriaDijkstraInstance.h"
 #include "Neighbours.h"
 
-BicriteriaDijkstraInstance::BicriteriaDijkstraInstance(RiskMap& risk_map, Coord from, Coord to,
+BicriteriaDijkstraInstance::BicriteriaDijkstraInstance(RiskMap& risk_map, Coord<int> from, Coord<int> to,
     int search_limit, float r)
 {
     (*this).risk_map = risk_map;
@@ -68,19 +68,19 @@ std::vector<Path> BicriteriaDijkstraInstance::computeParetoApxPaths() {
 Path BicriteriaDijkstraInstance::runWithAlpha(float alpha) {
     std::cout << "Computing for alpha: " << alpha << std::endl;
     
-    std::unordered_map<Coord, float, hash_fn> labels;
-    std::unordered_map<Coord, Coord, hash_fn> previous_nodes;
+    std::unordered_map<Coord<int>, float, hash_fn> labels;
+    std::unordered_map<Coord<int>, Coord<int>, hash_fn> previous_nodes;
     
     struct comparator {
         bool operator()(
-            std::pair<Coord, float>& a,
-            std::pair<Coord, float>& b)
+            std::pair<Coord<int>, float>& a,
+            std::pair<Coord<int>, float>& b)
                 {
                 return a.second > b.second;
                 }
         };
         
-    std::priority_queue<std::pair<Coord, float>, std::vector<std::pair<Coord, float>>, comparator> pq;
+    std::priority_queue<std::pair<Coord<int>, float>, std::vector<std::pair<Coord<int>, float>>, comparator> pq;
     
     pq.push(std::make_pair(this->from, 0.0));
            
@@ -90,10 +90,7 @@ Path BicriteriaDijkstraInstance::runWithAlpha(float alpha) {
 
     while (!pq.empty()) {
 
-        Coord current_node = pq.top().first;
-        if (current_node == this->to) {
-            //std::cout << "!!!current_node == this->to!!!\n";
-        }
+        Coord<int> current_node = pq.top().first;
         pq.pop();
         
         //std::cout << "new current_node in dijkstra" << current_node.x << " " << current_node.y << "\n";
@@ -115,11 +112,14 @@ Path BicriteriaDijkstraInstance::runWithAlpha(float alpha) {
             
             float weight = this->risk_map.risk(current_node, neighbour, this->r_m) * alpha + 
                 this->risk_map.lengthM(current_node, neighbour);
+                
+            //std::cout << "Weight: " << weight << "\n";
             
             float new_label = current_label + weight;
             
             if (labels.find(neighbour) == labels.end()) {
                 //key is not present
+                //std::cout << "insert new labels\n";
                 labels.insert({ neighbour, new_label });
                 previous_nodes.insert({ neighbour, current_node });
                 pq.push(std::make_pair(neighbour, new_label));
@@ -140,23 +140,26 @@ Path BicriteriaDijkstraInstance::runWithAlpha(float alpha) {
 }
 
 
-Path BicriteriaDijkstraInstance::unwrapPath(std::unordered_map<Coord, Coord, hash_fn> nodes_previous,
-                                            std::unordered_map<Coord, float, hash_fn> nodes_labels,
+Path BicriteriaDijkstraInstance::unwrapPath(std::unordered_map<Coord<int>, Coord<int>, hash_fn> nodes_previous,
+                                            std::unordered_map<Coord<int>, float, hash_fn> nodes_labels,
                                             float alpha) {
     std::cout << "unwrapPath\n";
-    std::vector<Coord> path;
+    std::vector<Coord<int>> path;
     int total_risk = 0;
     float total_length = 0.0;
 
-    Coord previous_node = this->to;
+    Coord<int> previous_node = this->to;
         
     while (previous_node != this->from) {
         path.push_back(previous_node);
-        Coord new_previous_node = nodes_previous.at(previous_node);
-        total_risk += this->risk_map.risk(previous_node, new_previous_node, this->r_m);
+        Coord<int> new_previous_node = nodes_previous.at(previous_node);
+        int new_risk = this->risk_map.risk(previous_node, new_previous_node, this->r_m);
+        //std::cout << new_risk << " ";
+        total_risk += new_risk;
         total_length += this->risk_map.lengthM(previous_node, new_previous_node);
         previous_node = new_previous_node;
     }
+    std::cout << "\n";
     path.push_back(this->from);
     total_risk += this->risk_map.risk(previous_node, this->from, this->r_m);
     total_length += this->risk_map.lengthM(previous_node, this->from);

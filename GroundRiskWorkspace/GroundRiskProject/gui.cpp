@@ -1,8 +1,3 @@
-///////////////////////////////////////////////////////////////////////////
-// C++ code generated with wxFormBuilder (version Nov  5 2013)
-// http://www.wxformbuilder.org/
-///////////////////////////////////////////////////////////////////////////
-
 #include "gui.h"
 #include "BicriteriaDijkstraInstance.h"
 #include "risks.h"
@@ -12,10 +7,7 @@
 #include <linux/limits.h>   // PATH_MAX
 
 BEGIN_EVENT_TABLE(MainFrameBase, wxFrame)
-	EVT_MENU(ID_LOAD,  MainFrameBase::OnOpenImage)
-    EVT_MENU(ID_QUIT,  MainFrameBase::OnQuit)
 	EVT_CLOSE(MainFrameBase::OnClose)
-
 END_EVENT_TABLE()
 
 std::istream& operator>>(std::istream& is, std::vector<int>& vec)
@@ -78,59 +70,81 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& t)
 
 ///////////////////////////////////////////////////////////////////////////
 
-MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style ) : wxFrame( parent, id, title, pos, size, style )
+MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, 
+                              const wxSize& size, long style ) : wxFrame( parent, id, title, pos, size, style )
 {
 	this->SetSizeHints( wxDefaultSize, wxDefaultSize );
-    wxMenu *file_menu = new wxMenu();
-	file_menu->Append(ID_LOAD, _T("&Open image..."));
-	file_menu->AppendSeparator();
-	file_menu->Append(ID_QUIT, _T("&Exit"));
-
-	wxMenuBar *menuBar = new wxMenuBar();
-	menuBar->Append(file_menu, _T("&File"));
-	SetMenuBar( menuBar );
-
-// create the canvas that will manage the image
-	//m_canvas = new MyCanvas( this, -1, wxDefaultPosition, wxDefaultSize);
-	m_imageLoaded = false ;
-	Centre() ;
-    
-    
-        const int borderAround = FromDIP(10);
+   
+    const int borderAround = FromDIP(10);
         
-        wxBoxSizer* bSizer = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer* bSizer = new wxBoxSizer(wxVERTICAL);
 
-        wxButton* button = new wxButton(this, wxID_ANY, "Load image file...");
-        bSizer->Add(button, wxSizerFlags().Expand().Border(wxALL, borderAround));
-        button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &MainFrameBase::OnLoadImageFile, this);
+    wxButton* button = new wxButton(this, wxID_ANY, "Load image file...");
+    bSizer->Add(button, wxSizerFlags().Expand().Border(wxALL, borderAround));
 
-        m_bitmapPanel = new MyBitmapPanel(this);
-        bSizer->Add(m_bitmapPanel, wxSizerFlags().Expand().Proportion(1).Border(wxALL, borderAround));
+    button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &MainFrameBase::OnOpenImage, this);
+
+    m_bitmapPanel = new MyBitmapPanel(this);
+    bSizer->Add(m_bitmapPanel, wxSizerFlags().Expand().Proportion(1).Border(wxALL, borderAround));
         
-        SetSizer(bSizer);
-
-
+    SetSizer(bSizer);
 }
 
-//------------------------------------------------------------------------
-void MainFrameBase::OnQuit(wxCommandEvent& WXUNUSED(event))
-//------------------------------------------------------------------------
-{
-    Close(true) ;
-}
 
 //------------------------------------------------------------------------
 void MainFrameBase::OnClose(wxCloseEvent& event)
 //------------------------------------------------------------------------
 {
-	//delete m_canvas ;
+	delete m_bitmapPanel;
 	event.Skip() ;
 }
+
 
 //------------------------------------------------------------------------
 void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
 //------------------------------------------------------------------------
 {
+    // Load image (population density)
+    
+    char result[PATH_MAX];
+    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+    const char *path;
+    if (count != -1) {
+        path = dirname(result);
+    }
+    
+    std::string full_path = path;
+    std::string png_full_path = full_path;
+    png_full_path = png_full_path.append("/data/density_fixed_scaled.png");
+    wxString png_filename = png_full_path;
+       
+    // Load the image
+    wxImage image(png_full_path, wxBITMAP_TYPE_PNG);
+    
+    // Set from/to coordinates
+    
+    //Coord<int> from = {517, 412};
+    //Coord<int> to = {765, 600};
+    Coord<int> from = {517, 412};
+    Coord<int>to = {527, 422};
+    
+    // Display population density with from/to points
+    
+    wxImage image_from_to(image);
+    for (int i= from.x-5; i<from.x+5;i++)
+        for (int j=from.y-5; j<from.y+5;j++) 
+            image_from_to.SetRGB(i, j, 255,0,0);
+                    
+    for (int i= to.x-5; i<to.x+5;i++)
+        for (int j=to.y-5; j<to.y+5;j++) 
+            image_from_to.SetRGB(i, j, 255,0,0);
+
+    m_bitmapPanel->SetBitmap(wxBitmap(image_from_to));
+    SetTitle(wxString::Format("Population density (%s: %d x %d pixels)", 
+             wxFileName(png_full_path).GetFullName(), image_from_to.GetWidth(), image_from_to.GetHeight()));                
+        
+    // Create risk map from population density image
+    
     std::vector<unsigned char> color1 = {255, 255, 255, 255};
     std::vector<unsigned char> color2 = {214, 214, 214, 255};
     std::vector<unsigned char> color3 = {180, 209, 82, 255};
@@ -147,25 +161,7 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     std::pair<ColorsMapType::iterator, bool> result5 = colors.insert(std::make_pair(color5, 499));
     std::pair<ColorsMapType::iterator, bool> result6 = colors.insert(std::make_pair(color6, 1000));
 
-	//wxString filename = wxFileSelector(_T("Select file"),_T(""),_T(""),_T(""), _T("All files (*.*)|*.*") );
-    //std::cout << filename;
-     
-    char result[PATH_MAX];
-    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
-    const char *path;
-    if (count != -1) {
-        path = dirname(result);
-    }
-    
-    std::string full_path = path;
-    std::string png_full_path = full_path;
-    png_full_path = png_full_path.append("/data/density_fixed_scaled.png");
-    wxString png_filename = png_full_path;
-       
-    // Load the image.
-    wxImage image(png_full_path, wxBITMAP_TYPE_PNG);
     std::vector<std::vector<int>> map = LoadMapFromImage(image, colors);
-    
     // Displaying map
     /*for (int i = 0; i < map.size(); i++) {
         for (auto it = map[i].begin(); it != map[i].end(); it++)
@@ -179,19 +175,13 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     //risk_map.offset = 25;
     risk_map.offset = 0;
     
-    //BicriteriaDijkstra
-    
-    //Coord from = {517, 412};
-    //Coord to = {765, 600};
-    Coord from = {517, 412};
-    Coord to = {527, 422};
+    // Calculate paths
     
     auto start = std::chrono::high_resolution_clock::now();
     
     BicriteriaDijkstraInstance* inst = new BicriteriaDijkstraInstance(risk_map, from, to, 2, 150);
 
     std::vector<Path> paths = inst->computeParetoApxPaths();
-    
     std::cout << paths << std::endl;
 
     delete inst;
@@ -200,26 +190,14 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
     std::cout << "Duration: " << duration.count() << std::endl;
 
-	if ( !png_filename.empty() )
-	{
-		//m_canvas->LoadImage(png_filename);
-        
-        //wxBitmap bitmap(image);
-        //m_canvas-> SetBackgroundBitmap(bitmap);
-    
-		m_imageLoaded = true ;
-	}
-
     //savePathsToJson("./results/res_nk.json", res_routes);
-
 }
 
 
 //------------------------------------------------------------------------
 std::vector<std::vector<int>> MainFrameBase::LoadMapFromImage(wxImage& image, ColorsMapType& colors)
 //------------------------------------------------------------------------
-{
-   
+{   
     std::vector<std::vector<int>> map;
 
     unsigned char *rgb = image.GetData(), *alpha = image.GetAlpha();
