@@ -6,12 +6,13 @@
 #ifndef __GUI_H__
 #define __GUI_H__
 
+#include "MapPanel.h"
+#include "risks.h"
+#include "RiskMap.h"
+
 #include <wx/artprov.h>
 #include <wx/xrc/xmlres.h>
 #include <wx/intl.h>
-#include <wx/string.h>
-#include <wx/bitmap.h>
-#include <wx/image.h>
 #include <wx/icon.h>
 #include <wx/menu.h>
 #include <wx/gdicmn.h>
@@ -21,28 +22,13 @@
 #include <wx/sizer.h>
 #include <wx/statusbr.h>
 #include <wx/frame.h>
-
-
-#include "wx/wxprec.h"
-#include "risks.h"
-
-#ifdef __BORLANDC__
-    #pragma hdrstop
-#endif
-
-#ifndef WX_PRECOMP
-    #include "wx/wx.h"
-#endif
-
+#include <wx/string.h>
+#include <wx/bitmap.h>
 #include <wx/image.h>
 #include <wx/file.h>
-#include <wx/bitmap.h>
+#include "wx/wxprec.h"
 
 #include <filesystem>
-
-#include "canvas.h"
-#include "risks.h"
-
 #include <string>
 #include <map>
 #include <vector>
@@ -52,11 +38,19 @@
 #include <assert.h>
 #include <chrono>
 
+#ifdef __BORLANDC__
+    #pragma hdrstop
+#endif
+
+#ifndef WX_PRECOMP
+    #include "wx/wx.h"
+#endif
+
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Class MainFrameBase
 ///////////////////////////////////////////////////////////////////////////////
-class MyBitmapPanel;
+class MapPanel;
 
 class MainFrameBase : public wxFrame 
 {
@@ -75,15 +69,22 @@ class MainFrameBase : public wxFrame
 		virtual void OnExitClick( wxCommandEvent& event ) { event.Skip(); }
         
         void OnClose(wxCloseEvent& event) ;
-        void OnOpenImage(wxCommandEvent& WXUNUSED(event) ) ;
+        void OnCalculatePath(wxCommandEvent& WXUNUSED(event) ) ;
         
         DECLARE_EVENT_TABLE()
 			
     private:
-
-        std::vector<std::vector<int>> LoadMapFromImage(wxImage& image, ColorsMapType& colors);
     
-        MyBitmapPanel* m_bitmapPanel;
+        void loadImage();
+        
+        void createRiskMap();
+
+        std::vector<std::vector<int>> loadMapFromImage(wxImage& image, ColorsMapType& colors);
+    
+        MapPanel* m_bitmapPanel;
+        std::string m_image_full_path;
+        
+        RiskMap m_risk_map;
 };
 
 #endif //__GUI_H__

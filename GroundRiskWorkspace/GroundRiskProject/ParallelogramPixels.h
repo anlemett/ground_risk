@@ -2,8 +2,8 @@
 #define PARALLELOGRAMPIXELS_H
 
 #include "risks.h"
-#include <bits/stdc++.h>
 
+#include <bits/stdc++.h>
 #include <iterator> // For std::forward_iterator_tag
 #include <cstddef>  // For std::ptrdiff_t
 

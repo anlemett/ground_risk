@@ -79,15 +79,20 @@ MainFrameBase::MainFrameBase( wxWindow* parent, wxWindowID id, const wxString& t
         
     wxBoxSizer* bSizer = new wxBoxSizer(wxVERTICAL);
 
-    wxButton* button = new wxButton(this, wxID_ANY, "Load image file...");
+    wxButton* button = new wxButton(this, wxID_ANY, "Calculate path");
     bSizer->Add(button, wxSizerFlags().Expand().Border(wxALL, borderAround));
 
-    button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &MainFrameBase::OnOpenImage, this);
+    button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &MainFrameBase::OnCalculatePath, this);
 
-    m_bitmapPanel = new MyBitmapPanel(this);
+    m_bitmapPanel = new MapPanel(this);
+
     bSizer->Add(m_bitmapPanel, wxSizerFlags().Expand().Proportion(1).Border(wxALL, borderAround));
         
     SetSizer(bSizer);
+    
+    loadImage();
+    
+    createRiskMap();
 }
 
 
@@ -100,10 +105,7 @@ void MainFrameBase::OnClose(wxCloseEvent& event)
 }
 
 
-//------------------------------------------------------------------------
-void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
-//------------------------------------------------------------------------
-{
+void MainFrameBase::loadImage() {
     // Load image (population density)
     
     char result[PATH_MAX];
@@ -115,35 +117,19 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     
     std::string full_path = path;
     std::string png_full_path = full_path;
-    png_full_path = png_full_path.append("/data/density_fixed_scaled.png");
-    wxString png_filename = png_full_path;
+    m_image_full_path = png_full_path.append("/data/density_fixed_scaled.png");
        
     // Load the image
-    wxImage image(png_full_path, wxBITMAP_TYPE_PNG);
+    wxImage image(m_image_full_path, wxBITMAP_TYPE_PNG);
     
-    // Set from/to coordinates
-    
-    //Coord<int> from = {517, 412};
-    //Coord<int> to = {765, 600};
-    Coord<int> from = {517, 412};
-    Coord<int>to = {527, 422};
-    
-    // Display population density with from/to points
-    
-    wxImage image_from_to(image);
-    for (int i= from.x-5; i<from.x+5;i++)
-        for (int j=from.y-5; j<from.y+5;j++) 
-            image_from_to.SetRGB(i, j, 255,0,0);
-                    
-    for (int i= to.x-5; i<to.x+5;i++)
-        for (int j=to.y-5; j<to.y+5;j++) 
-            image_from_to.SetRGB(i, j, 255,0,0);
+    m_bitmapPanel->SetBitmap(wxBitmap(image));
+    SetTitle(wxString::Format("Population density (%d x %d pixels)", 
+             image.GetWidth(), image.GetHeight()));                
+}
 
-    m_bitmapPanel->SetBitmap(wxBitmap(image_from_to));
-    SetTitle(wxString::Format("Population density (%s: %d x %d pixels)", 
-             wxFileName(png_full_path).GetFullName(), image_from_to.GetWidth(), image_from_to.GetHeight()));                
-        
+void MainFrameBase::createRiskMap() {
     // Create risk map from population density image
+    wxImage image(m_image_full_path, wxBITMAP_TYPE_PNG);
     
     std::vector<unsigned char> color1 = {255, 255, 255, 255};
     std::vector<unsigned char> color2 = {214, 214, 214, 255};
@@ -161,7 +147,7 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     std::pair<ColorsMapType::iterator, bool> result5 = colors.insert(std::make_pair(color5, 499));
     std::pair<ColorsMapType::iterator, bool> result6 = colors.insert(std::make_pair(color6, 1000));
 
-    std::vector<std::vector<int>> map = LoadMapFromImage(image, colors);
+    std::vector<std::vector<int>> map = loadMapFromImage(image, colors);
     // Displaying map
     /*for (int i = 0; i < map.size(); i++) {
         for (auto it = map[i].begin(); it != map[i].end(); it++)
@@ -169,17 +155,46 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
         std::cout << std::endl;
     }*/
     
-    RiskMap risk_map;
-    risk_map.map = map;
-    risk_map.m_per_pixel = 1000.0/(131.0/2.0);
-    //risk_map.offset = 25;
-    risk_map.offset = 0;
+
+    m_risk_map.map = map;
+    m_risk_map.m_per_pixel = 1000.0/(131.0/2.0);
+    //m_risk_map.offset = 25;
+    m_risk_map.offset = 0;
+}
+
+//------------------------------------------------------------------------
+void MainFrameBase::OnCalculatePath(wxCommandEvent& WXUNUSED(event) )
+//------------------------------------------------------------------------
+{    
+    // Set from/to coordinates
     
+    //Coord<int> from = {517, 412};
+    //Coord<int> to = {765, 600};
+    Coord<int> from = {517, 412};
+    Coord<int>to = {537, 432};
+    int search_limit = 2;
+    
+    // Display population density with from/to points
+  
+    wxImage image_from_to(m_image_full_path, wxBITMAP_TYPE_PNG);
+    
+    for (int i= from.x-5; i<from.x+5;i++)
+        for (int j=from.y-5; j<from.y+5;j++) 
+            image_from_to.SetRGB(i, j, 255,0,0);
+                    
+    for (int i= to.x-5; i<to.x+5;i++)
+        for (int j=to.y-5; j<to.y+5;j++) 
+            image_from_to.SetRGB(i, j, 255,0,0);
+
+    m_bitmapPanel->SetBitmap(wxBitmap(image_from_to));
+    SetTitle(wxString::Format("Population density (%d x %d pixels)", 
+             image_from_to.GetWidth(), image_from_to.GetHeight()));                
+        
     // Calculate paths
     
     auto start = std::chrono::high_resolution_clock::now();
     
-    BicriteriaDijkstraInstance* inst = new BicriteriaDijkstraInstance(risk_map, from, to, 2, 150);
+    BicriteriaDijkstraInstance* inst = new BicriteriaDijkstraInstance(m_risk_map, from, to, search_limit, 150);
 
     std::vector<Path> paths = inst->computeParetoApxPaths();
     std::cout << paths << std::endl;
@@ -187,15 +202,15 @@ void MainFrameBase::OnOpenImage(wxCommandEvent& WXUNUSED(event) )
     delete inst;
     
     auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    std::cout << "Duration: " << duration.count() << std::endl;
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+    std::cout << "Time elapsed is: " << duration.count() << "s\n";
 
     //savePathsToJson("./results/res_nk.json", res_routes);
 }
 
 
 //------------------------------------------------------------------------
-std::vector<std::vector<int>> MainFrameBase::LoadMapFromImage(wxImage& image, ColorsMapType& colors)
+std::vector<std::vector<int>> MainFrameBase::loadMapFromImage(wxImage& image, ColorsMapType& colors)
 //------------------------------------------------------------------------
 {   
     std::vector<std::vector<int>> map;
@@ -204,12 +219,11 @@ std::vector<std::vector<int>> MainFrameBase::LoadMapFromImage(wxImage& image, Co
     
     int image_height = image.GetHeight();
     int image_width = image.GetWidth();
-    //std::cout << image_height << " " << image_width << "\n";
 
     for (int y = 0; y < image_height; y++) {
         std::vector<int> line;
         for (int x = 0; x < image_width; x++) {
-            int offs = (y * image_width) + x;   ////Alpha offset
+            int offs = (y * image_width) + x;   //Alpha offset
             unsigned char pAlpha = 255;
             if (image.HasAlpha()) {
                 pAlpha = *(alpha + offs);
@@ -221,10 +235,8 @@ std::vector<std::vector<int>> MainFrameBase::LoadMapFromImage(wxImage& image, Co
             unsigned char pGreen = *(rgb + offs + 1);
             unsigned char pBlue = *(rgb + offs + 2);
            
-            //std::cout << (int)pAlpha <<" "<<(int)pRed <<" "<< (int)pGreen << " "<< (int)pBlue << "\n";
             std::vector<unsigned char> color = {pRed, pGreen, pBlue, pAlpha};
             int risk = colors.at(color);
-            //std::cout << risk <<"\n";
             
             line.push_back(risk);
         }

@@ -103,23 +103,15 @@ Path BicriteriaDijkstraInstance::runWithAlpha(float alpha) {
 
         Neighbours neigbours = this->risk_map.neighboursWithin(current_node, this->search_limit);
         
-        //std::cout << "neighboursWithin from: " << neigbours.x_from << " " << neigbours.y_from << std::endl;
-        //std::cout << "neighboursWithin to: " << neigbours.x_to << " " << neigbours.y_to << std::endl;
-        
        for (auto neighbour : neigbours) {
            
-           //std::cout << neighbour.x << " " << neighbour.y << std::endl;
-            
             float weight = this->risk_map.risk(current_node, neighbour, this->r_m) * alpha + 
                 this->risk_map.lengthM(current_node, neighbour);
                 
-            //std::cout << "Weight: " << weight << "\n";
-            
             float new_label = current_label + weight;
             
             if (labels.find(neighbour) == labels.end()) {
                 //key is not present
-                //std::cout << "insert new labels\n";
                 labels.insert({ neighbour, new_label });
                 previous_nodes.insert({ neighbour, current_node });
                 pq.push(std::make_pair(neighbour, new_label));
@@ -154,12 +146,11 @@ Path BicriteriaDijkstraInstance::unwrapPath(std::unordered_map<Coord<int>, Coord
         path.push_back(previous_node);
         Coord<int> new_previous_node = nodes_previous.at(previous_node);
         int new_risk = this->risk_map.risk(previous_node, new_previous_node, this->r_m);
-        //std::cout << new_risk << " ";
         total_risk += new_risk;
         total_length += this->risk_map.lengthM(previous_node, new_previous_node);
         previous_node = new_previous_node;
     }
-    std::cout << "\n";
+
     path.push_back(this->from);
     total_risk += this->risk_map.risk(previous_node, this->from, this->r_m);
     total_length += this->risk_map.lengthM(previous_node, this->from);

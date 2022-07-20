@@ -57,28 +57,25 @@ void NeighboursIter::next() {
     }
 
     if (this->current_point.y > this->y_to) {
-        std::cout << "!!this->current_point.y > this->y_to!!" << this->current_point.y << " " << this->y_to << "\n";
         current_point = Coord<int>(this->x_to, this->y_to);
         return;
     }
 
     //?????
-    //Coord res = Coord(this->current_point.x + this->mapOffset, this->current_point.y + this->mapOffset);
+    //current_point = Coord(this->current_point.x + this->mapOffset, this->current_point.y + this->mapOffset);
 
     this->propagate();
     }
         
 
 void NeighboursIter::propagate() {
-    //std::cout << "propagate: " << current_point.x <<  " " << current_point.y << "\n";
+
     if (this->current_point.x >= this->x_to) {
         this->current_point.x = this->x_from;
         this->current_point.y += 1;
-        //std::cout << "increase y" << this->current_point.y <<"\n";
     }
     else {
         this->current_point.x += 1;
-        //std::cout << "increase x" << this->current_point.x <<"\n";
     }
 }
 
@@ -97,7 +94,6 @@ Neighbours::Neighbours(RiskMap* map, int search_limit, Coord<int> p)
     this->x_to = std::min(width - 1, p.x - map->offset + search_limit);
     this->y_from = std::max(0, p.y - map->offset - search_limit);
     this->y_to = std::min(height - 1, p.y - map->offset + search_limit);
-
 }
 
 Neighbours::~Neighbours()

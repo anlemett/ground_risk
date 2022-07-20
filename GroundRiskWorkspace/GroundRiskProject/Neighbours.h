@@ -5,7 +5,6 @@
 
 #include <vector>
 #include <iostream>
-
 #include <iterator> // For std::forward_iterator_tag
 #include <cstddef>  // For std::ptrdiff_t
 
@@ -68,6 +67,5 @@ public:
     int y_from;
     int y_to;
 };
-
 
 #endif // NEIGHBOURS_H

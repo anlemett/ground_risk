@@ -47,7 +47,6 @@ Neighbours RiskMap::neighboursWithin(Coord<int> p, int search_limit) {
 
 
 int RiskMap::risk(Coord<int> p1, Coord<int> p2, float r_m) {
-    std::cout << "RiskMap::risk\n";
     std::pair<Side, Side>  sides = this->parallelogramFromTwoPoints(p1, p2, r_m, this->m_per_pixel);
     int r = this->parallelogramRisk(sides.first, sides.second);
     return r;
@@ -81,8 +80,6 @@ std::pair<Side, Side> RiskMap::parallelogramFromTwoPoints(Coord<int> p1, Coord<i
         p2.x + sin(slope + M_PI) * rect_width,
         p2.y + cos(slope + M_PI) * rect_width
     };
-    
-    //std::cout<<orig_p1<<" "<<orig_p2<<" "<< dest_p1<<" "<< dest_p2 <<"\n";
 
     return std::make_pair(std::make_pair(orig_p1, orig_p2), std::make_pair(dest_p1, dest_p2));
 }
@@ -93,23 +90,17 @@ int RiskMap::parallelogramRisk(Side origin_side, Side destination_side) {
     
     ParallelogramPixels* rect = new ParallelogramPixels(origin_side, destination_side);
     
-    //std::cout << "inside parallelogramRisk"<< rect->l << " " << rect->t << " " << rect->b<< " "<<rect->r << "\n";
-    
     for (auto coord: *rect) {
-        //std::cout << "coord inside for: " << coord << "\n";
         if (0 <= coord.x && coord.x < width() && 0 <= coord.y && coord.y < height()) {
-            //std::cout << riskAt(coord) << " ";
             pop = pop + riskAt(coord);
         }
     }
-    //std::cout << "\n";
     
     delete rect;
     return pop;
 }
 
 int RiskMap::riskAt(Coord<int> coord) {
-    //std::cout << "x: "  << coord.x << " y: " << coord.y << " Map at x,y: "<< map.at(coord.y).at(coord.x) << " ";
     return map.at(coord.y).at(coord.x);
 }
 

@@ -1,4 +1,5 @@
 #include "ParallelogramPixels.h"
+
 #include <math.h>
 
 bool compareCoordXFirst(Coord<float> p1, Coord<float> p2)
@@ -31,8 +32,6 @@ ParallelogramPixelsIter::ParallelogramPixelsIter(Coord<float> l, Coord<float> r,
     this->b = b;
     this->t = t;
     
-    //this->iter_end = iter_end;
-    
     this->current_point = current_point;
     
     if (current_point.x == round(l.x)-1) {
@@ -41,7 +40,6 @@ ParallelogramPixelsIter::ParallelogramPixelsIter(Coord<float> l, Coord<float> r,
 
         current_range = yRange();
         current_point.y = this->current_range.first;
-//        std::cout << "current_range: " << current_range.first << " "<< current_range.second << "\n";
     }
     
     this->current_point_ptr = &(this->current_point);
@@ -85,21 +83,17 @@ ParallelogramPixelsIter ParallelogramPixelsIter::operator++(int) {
 }
 
 void ParallelogramPixelsIter::next() {
-//    std::cout << "inside next()";
-//    std::cout << "current_point was " << current_point << "\n";
            
     if (current_point.x <= r.x ) {
         if (current_point.y > 5000) {
             std::cout << "y is > 5000";
         }
         if (current_point.y + 1 > current_range.second) {
-//            std::cout << "increase x\n";
             current_point.x ++;
             current_range = yRange();
             current_point.y = current_range.first;
         }
         else {
-//            std::cout << "increase y\n";
             current_point.y ++;
         }
     }
@@ -107,7 +101,6 @@ void ParallelogramPixelsIter::next() {
         current_point.x = round(r.x) + 1;
         current_point.y = round(r.y);
     }
-    //std::cout << "current_point is " << current_point << "\n";
 }
 
 
@@ -123,7 +116,6 @@ std::pair<int, int> ParallelogramPixelsIter::yRange() {
     
 
     if (t.x < b.x) {
-//        std::cout << "1\n";
         //   -------      ----
         //  /     /   or   \  \
         // ------           \  \
@@ -131,23 +123,19 @@ std::pair<int, int> ParallelogramPixelsIter::yRange() {
         //                    ----
 
         if (current_point.x < t.x) {
-//            std::cout << "11\n";
             y1 = getMinY(l, b, current_point.x);
             y2 = getMaxY(l, t, current_point.x);
         } 
         else if (current_point.x >= t.x && current_point.x <= b.x) {
-//            std::cout << "12\n";
             y1 = getMinY(l, b, current_point.x);
             y2 = getMaxY(t, r, current_point.x);
         }
         else {
-//            std::cout << "13\n";
             y1 = getMinY(b, r, current_point.x);
             y2 = getMaxY(t, r, current_point.x);
         }
     }
     else if (t.x > b.x && t.y != b.y) {
-//        std::cout << "2\n";
         //          -------           ----
         //           \     \   or    /   /
         //            ------        /   /
@@ -155,38 +143,31 @@ std::pair<int, int> ParallelogramPixelsIter::yRange() {
         //                         ----
 
         if (current_point.x < b.x) {
-//            std::cout << "21\n";
             y1 = getMinY(l, b, current_point.x);
             y2 = getMaxY(l, t, current_point.x);
             }
         else if (current_point.x >= b.x && current_point.x <= t.x) {
-//            std::cout << "22\n";
             y1 = getMinY(b, r, current_point.x);
             y2 = getMaxY(l, t, current_point.x);
         }
         else {
-//            std::cout << "23\n";
             y1 = getMinY(b, r, current_point.x);
             y2 = getMaxY(t, r, current_point.x);
         }
     }
     else if (t.x == b.x) {
-//        std::cout << "3\n";
         //          /\
         //          \/
         if (current_point.x < t.x) {
-//            std::cout << "31\n";
             y1 = getMinY(l, b, current_point.x);
             y2 = getMaxY(l, t, current_point.x);
         }
         else {
-//            std::cout << "32\n";
             y1 = getMinY(b, r, current_point.x);
             y2 = getMaxY(t, r, current_point.x);
         }
     }
     else if (t.x > b.x && b.y == t.y) {
-//        std::cout << "4\n";
         y1 = getMinY(l, t, current_point.x);
         y2 = getMaxY(b, r, current_point.x);
     }
@@ -195,7 +176,6 @@ std::pair<int, int> ParallelogramPixelsIter::yRange() {
         exit(1);
     }
 
-//    std::cout << "y1: " << y1 << " y2: " << y2 << "\n";
     return std::make_pair(y1, y2);
 }
 
@@ -209,8 +189,6 @@ int ParallelogramPixelsIter::getMinY(Coord<float> p0, Coord<float> p1, float x) 
     float x1 = p1.x;
     float y1 = p1.y;
     
-//    std::cout << "y0: "<< y0 << " y1: " << y1 << "\n";
-
     if (abs(x0 - x1) < 0.00001) {
         return (int)floor(y0);
     }
@@ -218,19 +196,14 @@ int ParallelogramPixelsIter::getMinY(Coord<float> p0, Coord<float> p1, float x) 
     float slope = (y1 - y0)/(x1 - x0);
 
     if (slope >= 0.0) {
-//        std::cout << "slope>=0\n";
         float xl = std::max((float)x0, (float)(x - 0.5));
         float res = y0 + slope * (xl - x0) + 0.00001;
         return round(res);
     }
     else {
-//        std::cout << "slope<0\n";
         float xr = std::min((float)x1, (float)(x + 0.5));
-//        std::cout << "slope: " << slope << "\n";
         float temp = slope * (xr - x0);
-//        std::cout << "temp: " << temp << "\n";
         float res = y0 + slope * (xr - x0) + 0.00001;
-//        std::cout << "res: " << res << " round(res): " << round(res) << "\n";
         return round(res);
     }
 }
@@ -252,17 +225,13 @@ int ParallelogramPixelsIter::getMaxY(Coord<float> p0, Coord<float> p1, float x) 
     float slope = (y1 - y0)/(x1 - x0);
 
     if (slope >= 0.0) {
-//        std::cout << "max slope>=0\n";
         float xr = std::min((float)x1, (float)(x + 0.5));
         float temp = slope* (xr - x0);
-//        std::cout << "temp: " << temp << "\n";
         float res = y0 + slope * (xr - x0) - 0.00001;
-//        std::cout << "res: " << res << " round(res): " << round(res) << "\n";
 
         return std::round(res);
     }
     else {
-//        std::cout << "max slope<0\n";
         float xl = std::max((float)x0, (float)(x - 0.5));
         float res = y0 + slope * (xl - x0) - 0.00001;
         return std::round(res);
@@ -296,8 +265,6 @@ ParallelogramPixels::ParallelogramPixels(Side origin_side, Side destination_side
     
     b = b_t.at(0);
     t = b_t.at(1);
-    
-    std::cout <<"inside constructor: "<< l << " " << t << " " << b<< " "<<r << "\n";
 }
 
 
@@ -308,14 +275,12 @@ ParallelogramPixels::~ParallelogramPixels()
 
 ParallelogramPixelsIter ParallelogramPixels::begin() { 
     Coord<int> current_point = {round(l.x)-1, round(l.y)};
-    std::cout << "inside begin(): l=" << l << " r=" << r << " b=" << b << " t=" << t << "current_point"<< current_point<< "\n";
     return ParallelogramPixelsIter(l, r, b, t, current_point);
 }
  
  
 ParallelogramPixelsIter ParallelogramPixels::end() {//used to determine when the boundary has been reached: it should not be accessed directly
     Coord<int> current_point = {round(r.x)+1, round(r.y)};
-    std::cout << "inside end(): l=" << l << " r=" << r << " b=" << b << " t=" << t << "current_point"<< current_point<< "\n";
     return ParallelogramPixelsIter(l, r, b, t, current_point);
 }
 
