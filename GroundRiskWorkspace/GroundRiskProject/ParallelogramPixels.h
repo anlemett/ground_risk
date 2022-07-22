@@ -10,7 +10,7 @@
 class ParallelogramPixelsIter
 {
 public:
-    ParallelogramPixelsIter(Coord<float> l, Coord<float> r, Coord<float> b, Coord<float> t, Coord<int> current_point);
+    ParallelogramPixelsIter(Coord<double> l, Coord<double> r, Coord<double> b, Coord<double> t, Coord<int> current_point);
     ~ParallelogramPixelsIter();
    
     //https://anderberg.me/2016/07/04/c-custom-iterators/
@@ -34,15 +34,15 @@ private:
 
     void next();
  
-    std::pair<int, int> yRange(); //add float x ?
+    std::pair<int, int> yRange(); 
     
-    int getMinY(Coord<float> p0, Coord<float> p1, float x); // float x ??
-    int getMaxY(Coord<float> p0, Coord<float> p1, float x); // float x ??
+    int getMinY(Coord<double> p0, Coord<double> p1, double x);
+    int getMaxY(Coord<double> p0, Coord<double> p1, double x);
 
-    Coord<float> l;
-    Coord<float> r;
-    Coord<float> b;
-    Coord<float> t;
+    Coord<double> l;
+    Coord<double> r;
+    Coord<double> b;
+    Coord<double> t;
 
     bool iter_end;
     std::pair<int, int> current_range;    
@@ -65,10 +65,10 @@ public: //temp
     Side origin_side;
     Side destination_side;
     
-    Coord<float> l;
-    Coord<float> r;
-    Coord<float> b;
-    Coord<float> t;
+    Coord<double> l;
+    Coord<double> r;
+    Coord<double> b;
+    Coord<double> t;
 };
 
 #endif // PARALLELOGRAMPIXELS_H

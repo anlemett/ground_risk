@@ -1,7 +1,7 @@
 #include "BicriteriaDijkstraInstance.h"
 #include "Neighbours.h"
 
-BicriteriaDijkstraInstance::BicriteriaDijkstraInstance(RiskMap& risk_map, Coord<int> from, Coord<int> to,
+BicriteriaDijkstraInstance::BicriteriaDijkstraInstance(const RiskMap& risk_map, Coord<int> from, Coord<int> to,
     int search_limit, float r)
 {
     (*this).risk_map = risk_map;
@@ -26,21 +26,30 @@ std::vector<Path> BicriteriaDijkstraInstance::computeParetoApxPaths() {
     path = runWithAlpha(100000);
     paths.push_back(path);
     
-    // By default a max heap is created ordered by first element of pair
-    std::priority_queue<std::pair<int, std::vector<int>>> intervals_queue;
+    struct comparator {
+        bool operator()(
+            const std::pair<std::vector<int>, int>& a,
+            const std::pair<std::vector<int>, int>& b)
+            {
+                return a.second > b.second;
+            }
+        };
+    
+    
+    std::priority_queue<std::pair<std::vector<int>,int>, std::vector<std::pair<std::vector<int>,int>>, comparator> intervals_queue;
     
     std::vector<int> interval = {0, 1};
-    intervals_queue.push(make_pair(0, interval));
+    intervals_queue.push(make_pair(interval,0));
     
     while ((!intervals_queue.empty())&&(paths.size()<3)) {
-        std::pair<int, std::vector<int>> pair = intervals_queue.top();
+        std::pair<std::vector<int>, int> pair = intervals_queue.top();
         intervals_queue.pop();
-        interval = pair.second;
-        
+        interval = pair.first;
+                
         Path path0 = paths.at(interval.at(0));
         Path path1 = paths.at(interval.at(1));
-        
-        float beta = (float)(path1.risk - path0.risk)/(path1.length_m - path0.length_m);
+       
+        double beta = (double)(path1.risk - path0.risk)/(path1.length_m - path0.length_m);
         
         if (beta < - 0.0000001) {
             
@@ -56,8 +65,8 @@ std::vector<Path> BicriteriaDijkstraInstance::computeParetoApxPaths() {
                 paths.insert(itPos, new_path);
                 
                 std::vector<int> new_interval = {interval.at(1)-1, interval.at(1)};
-                intervals_queue.push(std::make_pair(interval.at(1), new_interval));
-                intervals_queue.push(std::make_pair(interval.at(1)-1, new_interval));
+                intervals_queue.push(std::make_pair(new_interval, interval.at(1)));
+                intervals_queue.push(std::make_pair(new_interval, interval.at(1)-1));
             }
         }
     }
@@ -65,22 +74,13 @@ std::vector<Path> BicriteriaDijkstraInstance::computeParetoApxPaths() {
 }
 
 
-Path BicriteriaDijkstraInstance::runWithAlpha(float alpha) {
+Path BicriteriaDijkstraInstance::runWithAlpha(double alpha) {
     std::cout << "Computing for alpha: " << alpha << std::endl;
     
-    std::unordered_map<Coord<int>, float, hash_fn> labels;
+    std::unordered_map<Coord<int>, double, hash_fn> labels;
     std::unordered_map<Coord<int>, Coord<int>, hash_fn> previous_nodes;
     
-    struct comparator {
-        bool operator()(
-            std::pair<Coord<int>, float>& a,
-            std::pair<Coord<int>, float>& b)
-                {
-                return a.second > b.second;
-                }
-        };
-        
-    std::priority_queue<std::pair<Coord<int>, float>, std::vector<std::pair<Coord<int>, float>>, comparator> pq;
+    priority_queue_with_remove<std::pair<Coord<int>, float>> pq;
     
     pq.push(std::make_pair(this->from, 0.0));
            
@@ -93,22 +93,20 @@ Path BicriteriaDijkstraInstance::runWithAlpha(float alpha) {
         Coord<int> current_node = pq.top().first;
         pq.pop();
         
-        //std::cout << "new current_node in dijkstra" << current_node.x << " " << current_node.y << "\n";
+        double current_label = labels.at(current_node);
         
-        float current_label = labels.at(current_node);
-
-        if (current_node == this->to) {
+        if ((current_node.x == this->to.x) &&(current_node.y == this->to.y)) {
             break;
         }
 
         Neighbours neigbours = this->risk_map.neighboursWithin(current_node, this->search_limit);
         
-       for (auto neighbour : neigbours) {
-           
-            float weight = this->risk_map.risk(current_node, neighbour, this->r_m) * alpha + 
+        for (auto neighbour : neigbours) {
+                      
+            double weight = this->risk_map.risk(current_node, neighbour, this->r_m) * alpha + 
                 this->risk_map.lengthM(current_node, neighbour);
                 
-            float new_label = current_label + weight;
+            double new_label = current_label + weight;
             
             if (labels.find(neighbour) == labels.end()) {
                 //key is not present
@@ -118,10 +116,11 @@ Path BicriteriaDijkstraInstance::runWithAlpha(float alpha) {
             }
             else {
                 // key is present
-                float entry = labels.at(neighbour);
-                if (entry > new_label) {
+                double entry = labels.at(neighbour);
+                if (entry > new_label) { 
                     labels.at(neighbour) = new_label;
                     previous_nodes.at(neighbour) = current_node;
+                    pq.remove(std::make_pair(neighbour, entry));
                     pq.push(std::make_pair(neighbour, new_label));
                 }
             }
@@ -132,9 +131,9 @@ Path BicriteriaDijkstraInstance::runWithAlpha(float alpha) {
 }
 
 
-Path BicriteriaDijkstraInstance::unwrapPath(std::unordered_map<Coord<int>, Coord<int>, hash_fn> nodes_previous,
-                                            std::unordered_map<Coord<int>, float, hash_fn> nodes_labels,
-                                            float alpha) {
+Path BicriteriaDijkstraInstance::unwrapPath(const std::unordered_map<Coord<int>, Coord<int>, hash_fn>& nodes_previous,
+                                            const std::unordered_map<Coord<int>, double, hash_fn>& nodes_labels,
+                                            double alpha) {
     std::cout << "unwrapPath\n";
     std::vector<Coord<int>> path;
     int total_risk = 0;
@@ -146,6 +145,7 @@ Path BicriteriaDijkstraInstance::unwrapPath(std::unordered_map<Coord<int>, Coord
         path.push_back(previous_node);
         Coord<int> new_previous_node = nodes_previous.at(previous_node);
         int new_risk = this->risk_map.risk(previous_node, new_previous_node, this->r_m);
+        //std::cout << "new_risk: "<< new_risk<< "\n";
         total_risk += new_risk;
         total_length += this->risk_map.lengthM(previous_node, new_previous_node);
         previous_node = new_previous_node;
@@ -153,7 +153,9 @@ Path BicriteriaDijkstraInstance::unwrapPath(std::unordered_map<Coord<int>, Coord
 
     path.push_back(this->from);
     total_risk += this->risk_map.risk(previous_node, this->from, this->r_m);
+    std::cout << "total_risk: "<< total_risk<< "\n";
     total_length += this->risk_map.lengthM(previous_node, this->from);
+    std::cout << "total_length: "<< total_length<< "\n";
 
     return ((struct Path) {path, nodes_labels.at(this->to), total_risk, total_length, alpha});
 }

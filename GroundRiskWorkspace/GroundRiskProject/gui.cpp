@@ -31,7 +31,6 @@ std::istream& operator>>(std::istream& is, std::vector<int>& vec)
     return is;
 }
 
-// for result json ???
 std::istream& operator>>(std::istream& is, std::vector<std::vector<int>>& m)
 {
     //#1 - check if it starts from '['
@@ -140,22 +139,15 @@ void MainFrameBase::createRiskMap() {
     
     ColorsMapType colors;
 
-    std::pair<ColorsMapType::iterator, bool> result1 = colors.insert(std::make_pair(color1, 1));
-    std::pair<ColorsMapType::iterator, bool> result2 = colors.insert(std::make_pair(color2, 4));
-    std::pair<ColorsMapType::iterator, bool> result3 = colors.insert(std::make_pair(color3, 19));
-    std::pair<ColorsMapType::iterator, bool> result4 = colors.insert(std::make_pair(color4, 199));
-    std::pair<ColorsMapType::iterator, bool> result5 = colors.insert(std::make_pair(color5, 499));
-    std::pair<ColorsMapType::iterator, bool> result6 = colors.insert(std::make_pair(color6, 1000));
+    colors.insert(std::make_pair(color1, 1));
+    colors.insert(std::make_pair(color2, 4));
+    colors.insert(std::make_pair(color3, 19));
+    colors.insert(std::make_pair(color4, 199));
+    colors.insert(std::make_pair(color5, 499));
+    colors.insert(std::make_pair(color6, 1000));
 
     std::vector<std::vector<int>> map = loadMapFromImage(image, colors);
-    // Displaying map
-    /*for (int i = 0; i < map.size(); i++) {
-        for (auto it = map[i].begin(); it != map[i].end(); it++)
-            std::cout << *it << " ";
-        std::cout << std::endl;
-    }*/
     
-
     m_risk_map.map = map;
     m_risk_map.m_per_pixel = 1000.0/(131.0/2.0);
     //m_risk_map.offset = 25;
@@ -168,10 +160,10 @@ void MainFrameBase::OnCalculatePath(wxCommandEvent& WXUNUSED(event) )
 {    
     // Set from/to coordinates
     
-    //Coord<int> from = {517, 412};
-    //Coord<int> to = {765, 600};
+    //Coord<int> from = {500, 500};
+    //Coord<int> to = {600, 600};
     Coord<int> from = {517, 412};
-    Coord<int>to = {537, 432};
+    Coord<int>to = {527, 422};
     int search_limit = 2;
     
     // Display population density with from/to points
@@ -197,7 +189,7 @@ void MainFrameBase::OnCalculatePath(wxCommandEvent& WXUNUSED(event) )
     BicriteriaDijkstraInstance* inst = new BicriteriaDijkstraInstance(m_risk_map, from, to, search_limit, 150);
 
     std::vector<Path> paths = inst->computeParetoApxPaths();
-    std::cout << paths << std::endl;
+    //std::cout << paths << std::endl;
 
     delete inst;
     

@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <math.h>
 
 typedef std::map<std::vector<unsigned char>, int> ColorsMapType;
 
@@ -33,12 +34,12 @@ struct Coord {
         return (x != p.x || y != p.y);
     }
 
-    bool operator==(const Coord<float>& p) const {
-        return ((float)x == p.x && (float)y == p.y);
+    bool operator==(const Coord<double>& p) const {
+        return ((double)x == p.x && (double)y == p.y);
     }
     
-    bool operator!=(const Coord<float>& p) const {
-        return ((float)x != p.x || (float)y != p.y);
+    bool operator!=(const Coord<double>& p) const {
+        return ((double)x != p.x || (double)y != p.y);
     }
 
     Coord& operator =(const Coord<T>& p) {
@@ -60,7 +61,7 @@ struct Coord {
     }
 };
 
-typedef std::pair<Coord<float>, Coord<float>> Side;
+typedef std::pair<Coord<double>, Coord<double>> Side;
 
 // https://www.techiedelight.com/use-struct-key-std-unordered_map-cpp/
 // The specialized hash function for `unordered_map` keys
@@ -77,15 +78,15 @@ struct hash_fn
 
 struct Path {
     std::vector<Coord<int>> path;
-    float linear_combination_weight;
+    double linear_combination_weight;
     int risk;
-    float length_m;
-    float alpha;
+    double length_m;
+    double alpha;
     
     Path() {
     }
     
-    Path(std::vector<Coord<int>>  path, float linear_combination_weight, int risk, float length_m, float alpha) {
+    Path(const std::vector<Coord<int>>&  path, double linear_combination_weight, int risk, double length_m, double alpha) {
         this->path = path;
         this->linear_combination_weight = linear_combination_weight;
         this->risk = risk;

@@ -51,20 +51,20 @@ NeighboursIter NeighboursIter::operator++(int) {
 }
 
 void NeighboursIter::next() {
-    if (this->current_point.x + this->mapOffset == this->p.x && this->current_point.y + this->mapOffset == this->p.y) {
-            
-        this->propagate();
-    }
-
-    if (this->current_point.y > this->y_to) {
-        current_point = Coord<int>(this->x_to, this->y_to);
-        return;
-    }
-
     //?????
     //current_point = Coord(this->current_point.x + this->mapOffset, this->current_point.y + this->mapOffset);
 
     this->propagate();
+
+    if (this->current_point.x + this->mapOffset == this->p.x && this->current_point.y + this->mapOffset == this->p.y) {
+        this->propagate();
+    }
+
+    if (this->current_point.y > this->y_to) {
+        current_point = Coord<int>(this->x_from, this->y_to+1);
+        return;
+    }
+
     }
         
 
@@ -107,6 +107,6 @@ NeighboursIter Neighbours::begin() {
  
  
 NeighboursIter Neighbours::end() {//used to determine when the boundary has been reached: it should not be accessed directly
-    Coord<int> current_point = Coord<int>(this->x_to, this->y_to);
+    Coord<int> current_point = Coord<int>(this->x_from, this->y_to+1);
     return NeighboursIter(this->p, current_point, this->x_from, this->y_from, this->x_to, this->y_to, this->map->offset);   
 }

@@ -6,6 +6,8 @@
 
 RiskMap::RiskMap()
 {
+    m_per_pixel = 1000.0/(131.0/2.0);
+    offset = 0;
 }
 
 RiskMap::~RiskMap()
@@ -55,32 +57,34 @@ int RiskMap::risk(Coord<int> p1, Coord<int> p2, float r_m) {
 
 std::pair<Side, Side> RiskMap::parallelogramFromTwoPoints(Coord<int> p1, Coord<int> p2, float r_m, float m_per_pixel) {
     
-    float y_diff = -(p2.y-p1.y);
-    float x_diff = (p2.x-p1.x);
+    double y_diff = -(p2.y-p1.y);
+    double x_diff = (p2.x-p1.x);
     
-    float slope = atan2(y_diff, x_diff);
+    double slope = atan2(y_diff, x_diff);
     int rect_width = ceil((r_m /m_per_pixel));
     
-    Coord<float> orig_p1 = {
-        p1.x + sin(slope) * rect_width,
-        p1.y + cos(slope) * rect_width
+    Coord<double> orig_p1 = {
+        p1.x + (double)sin(slope) * rect_width,
+        p1.y + (double)cos(slope) * rect_width
     };
     
-    Coord<float> orig_p2 = {
-        p1.x + sin(slope + M_PI) * rect_width,
-        p1.y + cos(slope + M_PI) * rect_width
+    Coord<double> orig_p2 = {
+        p1.x + (double)sin(slope + M_PI) * rect_width,
+        p1.y + (double)cos(slope + M_PI) * rect_width
     };
 
-    Coord<float> dest_p1 = {
-        p2.x + sin(slope) * rect_width,
-        p2.y + cos(slope) * rect_width
+    Coord<double> dest_p1 = {
+        p2.x + (double)sin(slope) * rect_width,
+        p2.y + (double)cos(slope) * rect_width
     };
     
-    Coord<float> dest_p2 = {
-        p2.x + sin(slope + M_PI) * rect_width,
-        p2.y + cos(slope + M_PI) * rect_width
+    Coord<double> dest_p2 = {
+        p2.x + (double)sin(slope + M_PI) * rect_width,
+        p2.y + (double)cos(slope + M_PI) * rect_width
     };
 
+    //std::cout << "parallelogramFromTwoPoints: " << orig_p1.x << " " << orig_p1.y << ":" << orig_p2.x << " " << orig_p2.y;
+    //std::cout << ":" << dest_p1.x << " " << dest_p1.y << ":" << dest_p2.x << " " << dest_p2.y << "\n";
     return std::make_pair(std::make_pair(orig_p1, orig_p2), std::make_pair(dest_p1, dest_p2));
 }
 
@@ -92,11 +96,14 @@ int RiskMap::parallelogramRisk(Side origin_side, Side destination_side) {
     
     for (auto coord: *rect) {
         if (0 <= coord.x && coord.x < width() && 0 <= coord.y && coord.y < height()) {
+            //std::cout << "pixel in rect: " << coord.x << " " << coord.y << "\n";
             pop = pop + riskAt(coord);
         }
     }
     
     delete rect;
+    
+    //std::cout << "parallelogramRisk: "<< pop<< "\n";
     return pop;
 }
 

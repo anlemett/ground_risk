@@ -2,7 +2,7 @@
 
 #include <math.h>
 
-bool compareCoordXFirst(Coord<float> p1, Coord<float> p2)
+bool compareCoordXFirst(Coord<double> p1, Coord<double> p2)
 {
     if (p1.x == p2.x) {
         return p1.y < p2.y;
@@ -12,7 +12,7 @@ bool compareCoordXFirst(Coord<float> p1, Coord<float> p2)
     }
 }
 
-bool compareCoordYFirst(Coord<float> p1, Coord<float> p2)
+bool compareCoordYFirst(Coord<double> p1, Coord<double> p2)
 {
     if (p1.y == p2.y) {
         return p1.x < p2.x;
@@ -24,7 +24,7 @@ bool compareCoordYFirst(Coord<float> p1, Coord<float> p2)
 
 
 // ParallelogramPixelsIter
-ParallelogramPixelsIter::ParallelogramPixelsIter(Coord<float> l, Coord<float> r, Coord<float> b, Coord<float> t,
+ParallelogramPixelsIter::ParallelogramPixelsIter(Coord<double> l, Coord<double> r, Coord<double> b, Coord<double> t,
                                                  Coord<int> current_point) {
 
     this->l = l;
@@ -34,13 +34,8 @@ ParallelogramPixelsIter::ParallelogramPixelsIter(Coord<float> l, Coord<float> r,
     
     this->current_point = current_point;
     
-    if (current_point.x == round(l.x)-1) {
-        current_point.x = floor(l.x);
-        current_point.y = 0;
-
-        current_range = yRange();
-        current_point.y = this->current_range.first;
-    }
+    this->current_range = yRange();
+    this->current_point.y = this->current_range.first;
     
     this->current_point_ptr = &(this->current_point);
 }
@@ -98,29 +93,25 @@ void ParallelogramPixelsIter::next() {
         }
     }
     else {
-        current_point.x = round(r.x) + 1;
-        current_point.y = round(r.y);
+        current_point.x = floor(r.x) + 1;
+        current_point.y = floor(r.y) + 1;
     }
+
 }
 
 
 std::pair<int, int> ParallelogramPixelsIter::yRange() {
-
-    if ((l.x != b.x) && (abs(l.x - b.x) < 0.001) || (t.y != r.y) && (abs(t.y - r.y)) < 0.001) {
-        std::cerr << "Numerical errors detected!" << std::endl;
-        exit(1);
-    }
 
     int y1 = 0;
     int y2 = 0;
     
 
     if (t.x < b.x) {
-        //   -------      ----
+        /*   -------      ----
         //  /     /   or   \  \
         // ------           \  \
         //                   \  \
-        //                    ----
+        //                    ---- */
 
         if (current_point.x < t.x) {
             y1 = getMinY(l, b, current_point.x);
@@ -136,11 +127,11 @@ std::pair<int, int> ParallelogramPixelsIter::yRange() {
         }
     }
     else if (t.x > b.x && t.y != b.y) {
-        //          -------           ----
+        /*          -------           ----
         //           \     \   or    /   /
         //            ------        /   /
         //                         /   /
-        //                         ----
+        //                         ----   */
 
         if (current_point.x < b.x) {
             y1 = getMinY(l, b, current_point.x);
@@ -156,8 +147,8 @@ std::pair<int, int> ParallelogramPixelsIter::yRange() {
         }
     }
     else if (t.x == b.x) {
-        //          /\
-        //          \/
+        /*          /\
+        //          \/  */
         if (current_point.x < t.x) {
             y1 = getMinY(l, b, current_point.x);
             y2 = getMaxY(l, t, current_point.x);
@@ -175,65 +166,62 @@ std::pair<int, int> ParallelogramPixelsIter::yRange() {
         std::cerr << "An unknown case occured!" << std::endl;
         exit(1);
     }
-
+    //std::cout << "YRange: " << y1 << " " << y2 << "\n";
     return std::make_pair(y1, y2);
 }
 
 
-int ParallelogramPixelsIter::getMinY(Coord<float> p0, Coord<float> p1, float x) { 
+int ParallelogramPixelsIter::getMinY(Coord<double> p0, Coord<double> p1, double x) { 
     // Thanks to Markus Jarderot from https://stackoverflow.com/questions/5610616/finding-all-pixels-at-least-partially-within-an-arbitrarily-oriented-rectangle
     // for inspiration.
 
-    float x0 = p0.x;
-    float y0 = p0.y;
-    float x1 = p1.x;
-    float y1 = p1.y;
+    double x0 = p0.x;
+    double y0 = p0.y;
+    double x1 = p1.x;
+    double y1 = p1.y;
     
     if (abs(x0 - x1) < 0.00001) {
         return (int)floor(y0);
     }
 
-    float slope = (y1 - y0)/(x1 - x0);
+    double slope = (y1 - y0)/(x1 - x0);
 
     if (slope >= 0.0) {
-        float xl = std::max((float)x0, (float)(x - 0.5));
-        float res = y0 + slope * (xl - x0) + 0.00001;
+        double xl = std::max((double)x0, (double)(x - 0.5));
+        double res = y0 + slope * (xl - x0) + 0.00001;
         return round(res);
     }
     else {
-        float xr = std::min((float)x1, (float)(x + 0.5));
-        float temp = slope * (xr - x0);
-        float res = y0 + slope * (xr - x0) + 0.00001;
+        double xr = std::min((double)x1, (double)(x + 0.5));
+        double res = y0 + slope * (xr - x0) + 0.00001;
         return round(res);
     }
 }
 
 
-int ParallelogramPixelsIter::getMaxY(Coord<float> p0, Coord<float> p1, float x) { 
+int ParallelogramPixelsIter::getMaxY(Coord<double> p0, Coord<double> p1, double x) { 
     // Thanks to Markus Jarderot from https://stackoverflow.com/questions/5610616/finding-all-pixels-at-least-partially-within-an-arbitrarily-oriented-rectangle
     // for inspiration.
 
-    float x0 = p0.x;
-    float y0 = p0.y;
-    float x1 = p1.x;
-    float y1 = p1.y;
-
+    double x0 = p0.x;
+    double y0 = p0.y;
+    double x1 = p1.x;
+    double y1 = p1.y;
+    
     if (abs(x0 - x1) < 0.00001) {
         return std::ceil(y1);
     }
 
-    float slope = (y1 - y0)/(x1 - x0);
+    double slope = (y1 - y0)/(x1 - x0);
 
     if (slope >= 0.0) {
-        float xr = std::min((float)x1, (float)(x + 0.5));
-        float temp = slope* (xr - x0);
-        float res = y0 + slope * (xr - x0) - 0.00001;
-
+        double xr = std::min((double)x1, (double)(x + 0.5));
+        double res = y0 + slope * (xr - x0) - 0.00001;
         return std::round(res);
     }
     else {
-        float xl = std::max((float)x0, (float)(x - 0.5));
-        float res = y0 + slope * (xl - x0) - 0.00001;
+        double xl = std::max((double)x0, (double)(x - 0.5));
+        double res = y0 + slope * (xl - x0) - 0.00001;
         return std::round(res);
     }
 }
@@ -242,24 +230,28 @@ int ParallelogramPixelsIter::getMaxY(Coord<float> p0, Coord<float> p1, float x) 
 //ParallelogramPixels
 ParallelogramPixels::ParallelogramPixels(Side origin_side, Side destination_side)
 {
-    // TODO: add round_if_needed();
     this->origin_side = origin_side;
     this->destination_side = destination_side;
+
+    this->origin_side.first.round_if_needed();
+    this->origin_side.second.round_if_needed();
+    this->destination_side.first.round_if_needed();
+    this->destination_side.second.round_if_needed();
     
-    std::vector<Coord<float>> points = {origin_side.first, origin_side.second, destination_side.first, destination_side.second};
+    std::vector<Coord<double>> points = {origin_side.first, origin_side.second, destination_side.first, destination_side.second};
     
     // constructor method, Deep copy 
-    std::vector<Coord<float>> l_mid1_mid2_r(points);
+    std::vector<Coord<double>> l_mid1_mid2_r(points);
     
     sort(l_mid1_mid2_r.begin(), l_mid1_mid2_r.end(), compareCoordXFirst);
     
     l = l_mid1_mid2_r.at(0);
-    Coord<float> mid1 = l_mid1_mid2_r.at(1), mid2 = l_mid1_mid2_r.at(2);
+    Coord<double> mid1 = l_mid1_mid2_r.at(1), mid2 = l_mid1_mid2_r.at(2);
     r = l_mid1_mid2_r.at(3);
         
-    std::vector<Coord<float>> mid_points = {mid1, mid2};
+    std::vector<Coord<double>> mid_points = {mid1, mid2};
     
-    std::vector<Coord<float>> b_t(mid_points);
+    std::vector<Coord<double>> b_t(mid_points);
     
     std::sort(b_t.begin(), b_t.end(), compareCoordYFirst);
     
@@ -274,13 +266,12 @@ ParallelogramPixels::~ParallelogramPixels()
 
 
 ParallelogramPixelsIter ParallelogramPixels::begin() { 
-    Coord<int> current_point = {round(l.x)-1, round(l.y)};
+    Coord<int> current_point = {(int)floor(l.x), 0};
     return ParallelogramPixelsIter(l, r, b, t, current_point);
 }
  
  
 ParallelogramPixelsIter ParallelogramPixels::end() {//used to determine when the boundary has been reached: it should not be accessed directly
-    Coord<int> current_point = {round(r.x)+1, round(r.y)};
+    Coord<int> current_point = {(int)floor(r.x)+1, (int)floor(r.y)+1};
     return ParallelogramPixelsIter(l, r, b, t, current_point);
 }
-

@@ -26,7 +26,7 @@ public:
     int riskAt(Coord<int> coord);
     
     std::vector<std::vector<int>> map;
-    float m_per_pixel;
+    double m_per_pixel;
     int offset;
 };
 
