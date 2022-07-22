@@ -8,12 +8,21 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
-    <File Name="canvas.cpp"/>
+    <File Name="MapPanel.cpp"/>
+    <File Name="Neighbours.cpp"/>
+    <File Name="ParallelogramPixels.cpp"/>
+    <File Name="RiskMap.cpp"/>
+    <File Name="BicriteriaDijkstraInstance.cpp"/>
     <File Name="gui.cpp"/>
     <File Name="main.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
-    <File Name="canvas.h"/>
+    <File Name="MapPanel.h"/>
+    <File Name="Neighbours.h"/>
+    <File Name="ParallelogramPixels.h"/>
+    <File Name="risks.h"/>
+    <File Name="RiskMap.h"/>
+    <File Name="BicriteriaDijkstraInstance.h"/>
     <File Name="gui.h"/>
     <File Name="main.h"/>
   </VirtualDirectory>

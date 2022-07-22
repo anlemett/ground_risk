@@ -10,52 +10,6 @@ BEGIN_EVENT_TABLE(MainFrameBase, wxFrame)
 	EVT_CLOSE(MainFrameBase::OnClose)
 END_EVENT_TABLE()
 
-std::istream& operator>>(std::istream& is, std::vector<int>& vec)
-{
-    //#1 - check if it starts from '['
-    char c;
-    is >> c;
-    if (c != '[')
-        throw std::runtime_error(std::string("Invalid character : ") + c + 
-                                   " when parsing vector of double");
-    //#2 - get the line till ']'
-    std::string line;
-    if (!std::getline(is, line, ']'))
-        throw std::runtime_error("Error parsing vector of double");
-
-    //#3 - parse values inside '[' and ']'
-    std::istringstream lstr(line);
-    std::string value;
-    while (std::getline(lstr, value, ','))
-        vec.push_back(stod(value));
-    return is;
-}
-
-std::istream& operator>>(std::istream& is, std::vector<std::vector<int>>& m)
-{
-    //#1 - check if it starts from '['
-    char c;
-    is >> c;
-    if (c != '[')
-        throw std::runtime_error(std::string("Invalid character : ") + c + 
-                                   " when parsing json file");
-
-    // parse matrix line-by-line
-    while(true)
-    {
-        std::vector<int> tmp;
-        is >> tmp;
-        m.push_back(std::move(tmp));
-        // if matrix finihed, c should contain ']', else - ','
-        is >> c;
-        if (c == ']')
-            return is;
-        if (c != ',')
-            throw std::runtime_error(std::string("Invalid character : ") + c + 
-                                       " when parsing json file");
-    }
-}
-
 // display vector
 template<typename T>
 std::ostream& operator<<(std::ostream& os, const std::vector<T>& t)
@@ -147,8 +101,7 @@ void MainFrameBase::createRiskMap() {
     colors.insert(std::make_pair(color6, 1000));
 
     std::vector<std::vector<int>> map = loadMapFromImage(image, colors);
-    
-    m_risk_map.map = map;
+        m_risk_map.map = map;
     m_risk_map.m_per_pixel = 1000.0/(131.0/2.0);
     //m_risk_map.offset = 25;
     m_risk_map.offset = 0;
@@ -163,7 +116,10 @@ void MainFrameBase::OnCalculatePath(wxCommandEvent& WXUNUSED(event) )
     //Coord<int> from = {500, 500};
     //Coord<int> to = {600, 600};
     Coord<int> from = {517, 412};
-    Coord<int>to = {527, 422};
+    Coord<int>to = {547, 422};
+    //Coord<int> from = {517, 442};
+    //Coord<int>to = {547, 412};
+
     int search_limit = 2;
     
     // Display population density with from/to points
@@ -189,15 +145,13 @@ void MainFrameBase::OnCalculatePath(wxCommandEvent& WXUNUSED(event) )
     BicriteriaDijkstraInstance* inst = new BicriteriaDijkstraInstance(m_risk_map, from, to, search_limit, 150);
 
     std::vector<Path> paths = inst->computeParetoApxPaths();
-    //std::cout << paths << std::endl;
+    std::cout << paths << std::endl;
 
     delete inst;
     
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
     std::cout << "Time elapsed is: " << duration.count() << "s\n";
-
-    //savePathsToJson("./results/res_nk.json", res_routes);
 }
 
 

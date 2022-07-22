@@ -4,11 +4,11 @@
 BicriteriaDijkstraInstance::BicriteriaDijkstraInstance(const RiskMap& risk_map, Coord<int> from, Coord<int> to,
     int search_limit, float r)
 {
-    (*this).risk_map = risk_map;
-    (*this).from = from;
-    (*this).to = to;
-    (*this).search_limit = search_limit;
-    (*this).r_m = r;
+    this->risk_map = risk_map;
+    this->from = from;
+    this->to = to;
+    this->search_limit = search_limit;
+    this->r_m = r;
 }
 
 BicriteriaDijkstraInstance::~BicriteriaDijkstraInstance()
@@ -26,49 +26,16 @@ std::vector<Path> BicriteriaDijkstraInstance::computeParetoApxPaths() {
     path = runWithAlpha(100000);
     paths.push_back(path);
     
-    struct comparator {
-        bool operator()(
-            const std::pair<std::vector<int>, int>& a,
-            const std::pair<std::vector<int>, int>& b)
-            {
-                return a.second > b.second;
-            }
-        };
-    
-    
-    std::priority_queue<std::pair<std::vector<int>,int>, std::vector<std::pair<std::vector<int>,int>>, comparator> intervals_queue;
-    
-    std::vector<int> interval = {0, 1};
-    intervals_queue.push(make_pair(interval,0));
-    
-    while ((!intervals_queue.empty())&&(paths.size()<3)) {
-        std::pair<std::vector<int>, int> pair = intervals_queue.top();
-        intervals_queue.pop();
-        interval = pair.first;
-                
-        Path path0 = paths.at(interval.at(0));
-        Path path1 = paths.at(interval.at(1));
+    Path path0 = paths.at(0);
+    Path path1 = paths.at(1);
        
-        double beta = (double)(path1.risk - path0.risk)/(path1.length_m - path0.length_m);
+    double beta = (double)(path1.risk - path0.risk)/(path1.length_m - path0.length_m);
         
-        if (beta < - 0.0000001) {
+    if (beta < - 0.0000001) {
             
-            Path new_path = this->runWithAlpha(-1.0/beta);
-            if (interval.at(1) - interval.at(0) != 1) {
-                std::cerr << "An error with intervals!" << std::endl;
-                exit(1);
-            }
-            int index = interval.at(1);
-            
-            if (new_path.risk < path0.risk && new_path.length_m < path1.length_m) {
-                auto itPos = paths.begin() + index;
-                paths.insert(itPos, new_path);
-                
-                std::vector<int> new_interval = {interval.at(1)-1, interval.at(1)};
-                intervals_queue.push(std::make_pair(new_interval, interval.at(1)));
-                intervals_queue.push(std::make_pair(new_interval, interval.at(1)-1));
-            }
-        }
+        path = this->runWithAlpha(-1.0/beta);
+        
+        paths.push_back(path);
     }
     return paths;
 }
@@ -95,6 +62,8 @@ Path BicriteriaDijkstraInstance::runWithAlpha(double alpha) {
         
         double current_label = labels.at(current_node);
         
+        //std::cout << "current_node: " << current_node.x << " "<< current_node.y << " current_label" << current_label << "\n";
+        
         if ((current_node.x == this->to.x) &&(current_node.y == this->to.y)) {
             break;
         }
@@ -108,7 +77,9 @@ Path BicriteriaDijkstraInstance::runWithAlpha(double alpha) {
                 
             double new_label = current_label + weight;
             
-            if (labels.find(neighbour) == labels.end()) {
+            auto got = labels.find(neighbour);
+            
+            if (got == labels.end()) {
                 //key is not present
                 labels.insert({ neighbour, new_label });
                 previous_nodes.insert({ neighbour, current_node });
@@ -116,13 +87,13 @@ Path BicriteriaDijkstraInstance::runWithAlpha(double alpha) {
             }
             else {
                 // key is present
-                double entry = labels.at(neighbour);
-                if (entry > new_label) { 
-                    labels.at(neighbour) = new_label;
+                if (got->second > new_label) { 
                     previous_nodes.at(neighbour) = current_node;
-                    pq.remove(std::make_pair(neighbour, entry));
+                    pq.remove(std::make_pair(neighbour, got->second));
+                    got->second = new_label;
                     pq.push(std::make_pair(neighbour, new_label));
                 }
+
             }
         }
     }
