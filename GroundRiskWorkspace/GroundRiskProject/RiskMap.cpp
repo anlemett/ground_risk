@@ -34,17 +34,17 @@ int RiskMap::width() {
 
 
 float RiskMap::lengthM(Coord<int> p1, Coord<int> p2) {
-    float x_diff = (p1.x - p2.x);
-    float y_diff = (p1.y - p2.y);
-    float length_px_squared = pow(y_diff, 2) + pow(x_diff, 2);
-    float length_px = sqrt(length_px_squared);
+    double x_diff = (p1.x - p2.x);
+    double y_diff = (p1.y - p2.y);
+    double length_px_squared = pow(y_diff, 2) + pow(x_diff, 2);
+    double length_px = sqrt(length_px_squared);
     return length_px * this->m_per_pixel + 0.0000001;
 }
 
 
 Neighbours RiskMap::neighboursWithin(Coord<int> p, int search_limit) {
-    Neighbours* neighbours = new Neighbours(this, search_limit, p);
-    return *neighbours;
+    Neighbours neighbours(this, search_limit, p);
+    return neighbours;
 }
 
 

@@ -91,12 +91,13 @@ link_directories(
 
 # Define the CXX sources
 set ( CXX_SRCS
+    ${CMAKE_CURRENT_LIST_DIR}/AStarSearchInstance.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/main.cpp
     ${CMAKE_CURRENT_LIST_DIR}/MapPanel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/Neighbours.cpp
     ${CMAKE_CURRENT_LIST_DIR}/BicriteriaDijkstraInstance.cpp
     ${CMAKE_CURRENT_LIST_DIR}/RiskMap.cpp
     ${CMAKE_CURRENT_LIST_DIR}/gui.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/main.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ParallelogramPixels.cpp
 )
 

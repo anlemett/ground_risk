@@ -8,6 +8,7 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
+    <File Name="AStarSearchInstance.cpp"/>
     <File Name="MapPanel.cpp"/>
     <File Name="Neighbours.cpp"/>
     <File Name="ParallelogramPixels.cpp"/>
@@ -17,6 +18,7 @@
     <File Name="main.cpp"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
+    <File Name="AStarSearchInstance.h"/>
     <File Name="MapPanel.h"/>
     <File Name="Neighbours.h"/>
     <File Name="ParallelogramPixels.h"/>

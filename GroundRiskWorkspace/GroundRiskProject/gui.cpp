@@ -1,5 +1,6 @@
 #include "gui.h"
 #include "BicriteriaDijkstraInstance.h"
+#include "AStarSearchInstance.h"
 #include "risks.h"
 
 #include <libgen.h>         // dirname
@@ -101,7 +102,8 @@ void MainFrameBase::createRiskMap() {
     colors.insert(std::make_pair(color6, 1000));
 
     std::vector<std::vector<int>> map = loadMapFromImage(image, colors);
-        m_risk_map.map = map;
+    
+    m_risk_map.map = map;
     m_risk_map.m_per_pixel = 1000.0/(131.0/2.0);
     //m_risk_map.offset = 25;
     m_risk_map.offset = 0;
@@ -115,12 +117,12 @@ void MainFrameBase::OnCalculatePath(wxCommandEvent& WXUNUSED(event) )
     
     //Coord<int> from = {500, 500};
     //Coord<int> to = {600, 600};
-    Coord<int> from = {517, 412};
-    Coord<int>to = {547, 422};
-    //Coord<int> from = {517, 442};
-    //Coord<int>to = {547, 412};
+    //Coord<int> from = {517, 412};
+    //Coord<int>to = {522, 419};
+    Coord<int> from = {517, 442};
+    Coord<int>to = {547, 412};
 
-    int search_limit = 2;
+    int search_limit = 1;
     
     // Display population density with from/to points
   
@@ -142,7 +144,8 @@ void MainFrameBase::OnCalculatePath(wxCommandEvent& WXUNUSED(event) )
     
     auto start = std::chrono::high_resolution_clock::now();
     
-    BicriteriaDijkstraInstance* inst = new BicriteriaDijkstraInstance(m_risk_map, from, to, search_limit, 150);
+    //BicriteriaDijkstraInstance* inst = new BicriteriaDijkstraInstance(m_risk_map, from, to, search_limit, 150);
+    AStarSearchInstance* inst = new AStarSearchInstance(m_risk_map, from, to, search_limit, 150);
 
     std::vector<Path> paths = inst->computeParetoApxPaths();
     std::cout << paths << std::endl;
@@ -186,6 +189,7 @@ std::vector<std::vector<int>> MainFrameBase::loadMapFromImage(wxImage& image, Co
             
             line.push_back(risk);
         }
+
         map.push_back(line);
     }
     return map;
